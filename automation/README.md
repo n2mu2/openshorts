@@ -147,6 +147,80 @@ evergreen bank instead of stalling.
 
 ---
 
+## 4b. The 100 AI influencers (the channel's faces)
+
+`automation/content/influencers.json` defines **100 realistic Indian personas** —
+**10 topics × 10 influencers each** (5 men + 5 women, ages **25 / 30 / 35 / 40 / 45**,
+one man and one woman per age per topic). Every persona has:
+
+- a **unique name, handle, city, profession and catchphrase** (e.g. *Kusum Lata,
+  45, retired school principal, Patna — "Bachchon ko maths sikha chuki hoon…"*)
+- a **face sheet** (skin tone, hair, features, glasses, facial hair) + an exact
+  **outfit** matching an age-appropriate dress code (25: trendy smart-casual →
+  45: senior professional) — all composed into a photorealistic fal.ai prompt
+  with "smartphone photo, natural light, real skin texture, no AI-gloss" realism
+  instructions, so they **look like real people, not renders**
+- a **voice** (ElevenLabs premade, multilingual v2 — swap any `voice_id`)
+- an optional **`avatar_url`**: paste an OpenShorts gallery image URL to pin the
+  persona to ONE consistent face across all its reels (otherwise each reel
+  generates a fresh face from the same description)
+
+Rotation is deterministic: each topic's roster rotates 1→10 in order, so a page
+posting daily cycles 100 distinct faces and voices; news reels draw a stable
+persona per story from the whole pool. Posted history records `persona_id` +
+`persona_name`, and captions credit the persona with their handle — the
+"influencer identity" builds recognition over time.
+
+## 4c. Engagement format (built into every script)
+
+Each reel is scripted to hook → engage → convert, per the style of the
+reference videos (realistic AI influencer + monetization):
+
+1. **Punchy hook** (0–4s) — persona's catchphrase or the bank's hook line.
+2. **Problem + mid-roll question** (4–8s) — the persona asks the viewer
+   directly: *"Aapke saath aisa hua hai?" / "Has this happened to you?"*
+3. **Solution opened by a micro-story or example** (8–15s) — *"Meri ek dost…" /
+   "A friend of mine…"* — a 2-line, first-person everyday situation (from the
+   content bank's story/example material, or a realistic invented one).
+4. **Demo/example beat** (15–19s) — b-roll visual with a concrete illustration.
+5. **CTA with a comment-inviting question** (19–21s) — *"Comment YES if this
+   helped"* — plus follow/save/share.
+
+The Gemini verifier audits these engagement elements (questions, story/example,
+conversational tone) alongside facts and compliance; the bot also logs soft
+warnings if any element is missing.
+
+## 4d. Growth & revenue playbook (goal: India's top finance page)
+
+**Posting muscle**: 2 reels/day (news 08:30 IST + evergreen 19:00 IST) = 60+/mo.
+Consistency beats virality: the algorithm rewards daily posting from day 1.
+
+**Virality levers baked in**: bilingual (Hindi+English flips double the
+addressable audience), questions → comments (the #1 ranking signal on Reels),
+micro-stories → watch-time, saveable content (checklists/rules) → saves/shares,
+hashtags + keyword-rich captions → search discovery.
+
+**Scale knobs**: `POSTS_PER_DAY=3+` when you add more slots; the content bank
+holds 10,000+ unique reels before repetition.
+
+**Monetization ladder (realistic order)**:
+1. **Grow first** (0–10k): nothing to sell; optimize hooks + comments.
+2. **Brand sponsorships** (10k+): brokers/AMCs/fintechs pay ₹5k–₹50k+ per reel
+   at scale — educational "explainer" sponsorships fit the channel without
+   advice (always disclose as promo).
+3. **Affiliate**: broker/app referral links with disclosure (educational
+   framing only — no recommendations).
+4. **Cross-post to YouTube Shorts** (via `PLATFORMS=youtube`): finance is the
+   highest-RPM niche on YouTube — the same reels earn ad money there.
+5. **Own products later** (course/e-book): note — paid investment *advice* in
+   India requires SEBI registration; keep paid products educational.
+
+**Watch-outs**: never post unverified claims (the gate enforces it), never
+promise returns, and review IG Insights weekly — double down on whatever
+subtopic × persona cells get the most saves and shares.
+
+---
+
 ## 5. Schedule
 
 | Cron (UTC) | IST | Slot |

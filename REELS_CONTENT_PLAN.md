@@ -292,6 +292,18 @@ acting against them
 >   source facts, with attribution.
 > - 🔁 **Bilingual reels** — each reel randomly starts in Hindi or English and
 >   flips mid-reel; subtitles always run in the opposite language of the speech.
+>
+> **Recent upgrades (v3):**
+> - 🎭 **100 AI influencers** — `automation/content/influencers.json`: 10 topics ×
+>   10 personas (5 men + 5 women, ages 25/30/35/40/45), each with a realistic
+>   face sheet, age-appropriate dress code, catchphrase, city, profession and
+>   voice. Rotation is automatic; `avatar_url` pins a persona to one consistent
+>   face.
+> - 💬 **Engagement format** — every script includes a mid-roll viewer question,
+>   a micro-story/example opening, and a comment-inviting CTA (verified by the
+>   Gemini gate).
+> - 💰 **Growth & revenue playbook** — see `automation/README.md` §4d for the
+>   roadmap to India's top finance page.
 
 1. Pick a reel ID (e.g. `T2-S04-H07-A01`), assemble hook + subtopic + angle from the tables.
 2. Paste the master prompt (Section 3) into the **Android app → AI Shorts → description**.

@@ -46,6 +46,7 @@ from zoneinfo import ZoneInfo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONTENT_FILE = os.path.join(BASE_DIR, "content", "topics.json")
 NEWS_FILE = os.path.join(BASE_DIR, "content", "news_sources.json")
+INFLUENCERS_FILE = os.path.join(BASE_DIR, "content", "influencers.json")
 STATE_FILE = os.path.join(BASE_DIR, "state", "state.json")
 LOG_FILE = os.path.join(BASE_DIR, "state", "log.jsonl")
 
@@ -246,6 +247,38 @@ def gemini_json(prompt: str, system: str = "", temperature: float = 0.6, attempt
 def load_content() -> dict:
     with open(CONTENT_FILE, encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_influencers() -> dict:
+    with open(INFLUENCERS_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def pick_influencer(spec: dict, influencers: list) -> dict:
+    """Deterministic persona choice:
+    - bank reels: round-robin through the topic's 10-persona roster
+      (driven by the reel counter -> the same reel always gets the same face)
+    - news reels: hash of the story -> any of the 100 personas, stable per story
+    """
+    if spec["kind"] == "bank":
+        roster = [p for p in influencers if p["topic_id"] == spec["topic_id"]]
+        if not roster:
+            roster = influencers
+        return roster[spec["counter"] % len(roster)]
+    digest = int(spec["news"]["hash"], 16)
+    return influencers[digest % len(influencers)]
+
+
+def build_actor_description(persona: dict, data: dict) -> str:
+    """Compose a photorealistic fal.ai actor prompt from the persona sheet."""
+    style_table = data["style_table"]
+    gender = persona["gender"]
+    age_band = str(persona["age"])
+    base_style = style_table[gender][age_band]
+    return (
+        f"{persona['face']}. Wearing a {base_style}: {persona['style_extra']}. "
+        f"{data['camera_realism']}"
+    )
 
 
 def seasonal_weight(topic: dict, month: int) -> float:
@@ -569,6 +602,28 @@ def repair_script(script: dict) -> dict:
     return script
 
 
+def engagement_warnings(script: dict) -> list:
+    """Soft checks for the engagement elements (the Gemini verifier enforces
+    these authoritatively; this just surfaces warnings in the log)."""
+    warnings = []
+    segs = script.get("segments") or []
+    if len(segs) == 5:
+        problem = segs[1].get("narration") or ""
+        problem_sub = segs[1].get("subtitle_text") or ""
+        solution = segs[2].get("narration") or ""
+        cta = segs[4].get("narration") or ""
+        cta_sub = segs[4].get("subtitle_text") or ""
+        cta_blob = (cta + " " + cta_sub).lower()
+        if "?" not in problem and "?" not in problem_sub:
+            warnings.append("problem segment has no viewer question")
+        if len(solution.split()) < 12:
+            warnings.append("solution segment looks too short for a micro-story/example")
+        comment_cues = ("?", "comment", "batao", "likho", "karo", "answer", "yes", "no")
+        if not any(cue in cta_blob for cue in comment_cues):
+            warnings.append("CTA segment has no comment-inviting question")
+    return warnings
+
+
 def build_script(spec: dict) -> dict:
     lang1, lang2 = spec["lang_order"].split("-")
     lang1_name = "Hindi" if lang1 == "hi" else "English"
@@ -585,13 +640,42 @@ def build_script(spec: dict) -> dict:
         "(short TikTok-style phrasing)."
     )
 
-    actor = spec.get("actor") or {}
+    persona = spec.get("persona") or {}
+    persona_block = ""
+    if persona:
+        persona_block = (
+            "PERSONA: You are {name}, a {age}-year-old {profession} from {city}, India. "
+            "Speak in the first person, naturally, exactly like {name} would. "
+            "Speaking style: {tone}. Your signature catchphrase is \"{catchphrase}\" - "
+            "use it once, naturally, in the hook or CTA segment.\n"
+        ).format(
+            name=persona["name"], age=persona["age"], profession=persona["profession"],
+            city=persona["city"], tone=persona["tone"], catchphrase=persona["catchphrase"],
+        )
+
+    engagement_rules = (
+        "ENGAGEMENT RULES (mandatory):\n"
+        "1. The problem segment MUST end with a direct question to the viewer, in that "
+        "segment's language (e.g. 'Aapke saath aisa hua hai?' / 'Has this happened to you?').\n"
+        "2. The solution segment MUST open with a very short micro-story or a real-life "
+        "example (max 2 lines, first person - e.g. 'Meri ek dost ke saath...' / 'A friend "
+        "of mine...'). Use the story/example material from the brief when given; otherwise "
+        "invent a realistic everyday situation that fits the topic.\n"
+        "3. The CTA segment MUST end with a question that invites comments (e.g. "
+        "'Comment YES if this helped you' / 'Aap kya karte? Comment karo').\n"
+        "4. Keep the whole reel conversational - like one person talking to a friend, "
+        "not reading a textbook.\n"
+    )
+
+    actor_desc = spec.get("actor_desc", "Indian professional in their late 20s, friendly and trustworthy, casual modern clothing")
+
     prompt = f"""TASK: SCRIPT
 
 {spec['brief']}
 
+{persona_block}
 {split_rule}
-
+{engagement_rules}
 Return ONLY JSON, exactly this schema:
 {{
   "title": "short internal title",
@@ -601,13 +685,13 @@ Return ONLY JSON, exactly this schema:
   "hook_text": "2-5 word on-screen hook (in {lang1_name})",
   "segments": [
     {{"type": "hook", "start": 0, "end": 4, "narration": "...({lang1_name}, punchy hook)", "visual": "actor_talking", "broll_prompt": null, "emotion": "excited", "subtitle_text": "...({lang2_name})"}},
-    {{"type": "problem", "start": 4, "end": 8, "narration": "...({lang1_name})", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "concerned", "subtitle_text": "...({lang2_name})"}},
-    {{"type": "solution", "start": 8, "end": 15, "narration": "...({lang2_name})", "visual": "actor_talking", "broll_prompt": null, "emotion": "confident", "subtitle_text": "...({lang1_name})"}},
+    {{"type": "problem", "start": 4, "end": 8, "narration": "...({lang1_name}, ends with a QUESTION to the viewer)", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "concerned", "subtitle_text": "...({lang2_name})"}},
+    {{"type": "solution", "start": 8, "end": 15, "narration": "...({lang2_name}, opens with a micro-story or example)", "visual": "actor_talking", "broll_prompt": null, "emotion": "confident", "subtitle_text": "...({lang1_name})"}},
     {{"type": "demo", "start": 15, "end": 19, "narration": "...({lang2_name})", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "excited", "subtitle_text": "...({lang1_name})"}},
-    {{"type": "cta", "start": 19, "end": 21, "narration": "...({lang2_name}, CTA to follow/save/share)", "visual": "actor_talking", "broll_prompt": null, "emotion": "friendly", "subtitle_text": "...({lang1_name})"}}
+    {{"type": "cta", "start": 19, "end": 21, "narration": "...({lang2_name}, CTA to follow/save/share + a comment-inviting question)", "visual": "actor_talking", "broll_prompt": null, "emotion": "friendly", "subtitle_text": "...({lang1_name})"}}
   ],
   "full_narration": "all narration joined with spaces",
-  "actor_description": "{actor.get('desc', 'Indian professional in their late 20s, friendly and trustworthy, casual modern clothing')} (English, physical appearance only)",
+  "actor_description": "{actor_desc}",
   "hashtags": ["#..."],
   "caption": "bilingual caption: 1 English line + 1 Hindi line (short)"
 }}
@@ -652,7 +736,13 @@ AUDIT CHECKLIST — flag every violation:
 4. BILINGUAL: each segment's narration is genuinely in its assigned language; each
    subtitle_text is a faithful translation (no meaning drift, no invented content).
 5. SCHEMA: 5 segments with the correct type order and both broll_prompt filled.
-6. CAPTION: includes a disclaimer line (the bot appends it automatically — do not flag
+6. ENGAGEMENT: the problem segment ends with a direct question to the viewer; the
+   solution segment opens with a micro-story or example; the CTA ends with a
+   comment-inviting question; the tone is conversational, not textbook.
+7. PERSONA: the narration is first-person and consistent with the influencer's stated
+   age/profession/city; the catchphrase appears naturally once; no cringe or
+   age-inappropriate slang for the persona's age.
+8. CAPTION: includes a disclaimer line (the bot appends it automatically — do not flag
    it as missing), no clickbait.
 
 Return ONLY JSON:
@@ -746,14 +836,26 @@ def run_once(content: dict, state: dict, args) -> int:
             log("no fresh market news found — falling back to the evergreen bank", "WARN")
 
     spec = build_news_spec(news_item, today, slot, rng) if news_item else build_bank_spec(content, state, today, slot, rng)
+
+    # ------------------------------------------------- assign the influencer
+    inf_data = load_influencers()
+    influencers = inf_data["influencers"]
+    persona = pick_influencer(spec, influencers)
+    spec["persona"] = persona
+    spec["actor_desc"] = build_actor_description(persona, inf_data)
     log(f"planned reel {spec['reel_id']} — {spec['topic']} / {spec['subtopic'][:60]} / {spec['angle']}",
         reel_id=spec["reel_id"], kind=spec["kind"], lang_order=spec["lang_order"], slot=slot, date=today)
+    log(f"influencer: {persona['name']} ({persona['age']}, {persona['gender']}, {persona['city']}) — {persona['profession']} [{persona['id']}]",
+        persona_id=persona["id"])
     log(f"language flip: {spec['lang_order']}")
 
     if args.dry_run:
         print("\n----- DRY RUN — nothing was generated, verified or posted -----")
         print("kind       :", spec["kind"], "| lang order:", spec["lang_order"])
         print("reel id    :", spec["reel_id"])
+        print("influencer :", f"{persona['name']} · {persona['age']} · {persona['profession']} · {persona['city']} · {persona['handle']}")
+        print("catchphrase:", persona["catchphrase"])
+        print("actor desc :", spec["actor_desc"][:220], "…")
         if news_item:
             print("news source:", news_item["source"], "|", news_item["link"])
             print("news title :", news_item["title"])
@@ -776,6 +878,8 @@ def run_once(content: dict, state: dict, args) -> int:
             raise HttpError(0, f"script failed schema validation after repair: {issues}")
     script["use_script_subtitles"] = True if BILINGUAL else False
     log(f"script: {str(script.get('title'))[:80]} | segments=5 | {spec['lang_order']}")
+    for w in engagement_warnings(script):
+        log(f"engagement warning: {w}", "WARN")
 
     # ------------------------------------------------- 2. verify (Gemini)
     log("step 2/5: Gemini verification gate (correctness + authenticity + compliance)…")
@@ -792,11 +896,12 @@ def run_once(content: dict, state: dict, args) -> int:
         return 0
 
     # ------------------------------------------------- 3. generate
-    voice_id = pick_voice(BILINGUAL)
+    voice_id = persona.get("voice_id") or pick_voice(BILINGUAL)
     generate_body = {
         "script": script,
         "voice_id": voice_id,
-        "actor_description": spec.get("actor", {}).get("desc") or None,
+        "actor_description": spec.get("actor_desc") or None,
+        "selected_actor_url": persona.get("avatar_url") or None,
         "video_mode": VIDEO_MODE,
         "share_to_gallery": False,
     }
@@ -805,7 +910,7 @@ def run_once(content: dict, state: dict, args) -> int:
         gen_headers["X-Fal-Key"] = FAL_KEY
     if ELEVENLABS_KEY:
         gen_headers["X-ElevenLabs-Key"] = ELEVENLABS_KEY
-    log(f"step 3/5: generating reel (mode={VIDEO_MODE}, actor={spec.get('actor', {}).get('name', 'Indian professional')}, voice={voice_id})…")
+    log(f"step 3/5: generating reel (mode={VIDEO_MODE}, influencer={persona['name']}, voice={voice_id}, avatar={'reused' if persona.get('avatar_url') else 'generated fresh'})…")
     _, generated = http("POST", "/api/saasshorts/generate", generate_body, headers=gen_headers, timeout=600)
     job_id = generated.get("job_id")
     if not job_id:
@@ -832,7 +937,11 @@ def run_once(content: dict, state: dict, args) -> int:
         raise HttpError(0, f"timed out after {MAX_WAIT_MINUTES} min waiting for {job_id}")
 
     # ------------------------------------------------- 5. publish
-    caption_parts = [spec["caption_top"], script.get("caption") or ""]
+    persona_credit = (
+        f"With {persona['name']}, {persona['age']} - {persona['profession']}, {persona['city']}. "
+        f"Follow {persona['handle']}"
+    )
+    caption_parts = [spec["caption_top"], script.get("caption") or "", persona_credit]
     if news_item:
         caption_parts.append(f"\U0001F4F0 Source: {news_item['source']} ({news_item['link']})")
     caption_parts.append(" ".join(spec["hashtags"]))
@@ -869,6 +978,7 @@ def run_once(content: dict, state: dict, args) -> int:
         "date": today, "slot": slot, "reel_id": spec["reel_id"], "kind": spec["kind"],
         "topic_id": spec["topic_id"], "topic": spec["topic"],
         "subtopic": spec["subtopic"], "lang_order": spec["lang_order"],
+        "persona_id": persona["id"], "persona_name": persona["name"],
         "source": news_item["source"] if news_item else None,
         "news_link": news_item["link"] if news_item else None,
         "job_id": job_id, "video_url": result.get("video_url"),
