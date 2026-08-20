@@ -262,6 +262,25 @@ second batch.
 
 ---
 
+## 4f. Sample reel (no keys needed — download from Actions)
+
+A demo reel in the exact production format is prebuilt and rebuildable anytime:
+
+- `automation/sample_reel.py` composites committed assets
+  (`assets/sample_actor.png` = photorealistic AI influencer portrait from the
+  persona sheet, `assets/sample_voice.mp3` = bilingual TTS voiceover,
+  `assets/fonts/` = Mukta Bold (Devanagari+Latin) + Anton) into a 1080×1920
+  reel: English hook → Hindi flip, **cross-language subtitles** (English speech
+  → Hindi subs, Hindi speech → English subs), hook overlay, handle, disclaimer
+  strip, slow push-in zoom.
+- **Actions → "Sample Reel" → Run workflow** → when it finishes green, click
+  the run → **Artifacts** → download `sample-reel-L01-NIFTY`. Runs entirely on
+  the runner with apt ffmpeg — zero API keys, zero cost.
+- Local: `SAMPLE_FFMPEG=/path/to/ffmpeg python3 automation/sample_reel.py`
+  (needs an ffmpeg with drawtext; `pip install mutagen imageio-ffmpeg`).
+
+---
+
 ## 5. Schedule — 6 reels/day, every 4 hours
 
 | Cron (UTC) | IST | Slot | Content |

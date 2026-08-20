@@ -2,5 +2,6 @@
 .env
 __pycache__/
 *.pyc
-# downloaded reel media - ephemeral, do not commit (delivered to Drive)
+# ephemeral render/download dirs - never committed (delivered to Drive/artifacts)
 media/
+output/

@@ -1,0 +1,39 @@
+name: Sample Reel
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Optional note (not used in the build)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ffmpeg + deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          pip install --quiet mutagen
+
+      - name: Build the sample reel
+        run: python3 automation/sample_reel.py
+
+      - name: Upload sample reel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-reel-L01-NIFTY
+          path: automation/output/sample_reel_L01.mp4
+          retention-days: 7
