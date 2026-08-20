@@ -275,6 +275,14 @@ acting against them
 
 ## 8. How to use this with OpenShorts
 
+> **⚡ This whole plan is already automated.** The repo ships a cron-driven bot —
+> `automation/reels_bot.py` + `.github/workflows/reels-bot.yml` — that picks the
+> next reel from this exact 10×10×10 bank every day, generates it via the
+> OpenShorts API, and posts it to Instagram automatically. The topic weights,
+> hooks, angles, subtopics, myths, stats, CTAs and hashtags in this document are
+> encoded 1:1 in `automation/content/topics.json`. See `automation/README.md`
+> for the secrets to add and how to switch it on.
+
 1. Pick a reel ID (e.g. `T2-S04-H07-A01`), assemble hook + subtopic + angle from the tables.
 2. Paste the master prompt (Section 3) into the **Android app → AI Shorts → description**.
 3. Pick a script (3 are generated), tap **Generate reel**, preview.

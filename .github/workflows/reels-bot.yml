@@ -1,0 +1,76 @@
+name: Reels Bot
+
+on:
+  schedule:
+    # 03:00 UTC = 08:30 IST — morning slot (pre-market scroll)
+    - cron: "0 3 * * *"
+    # 13:30 UTC = 19:00 IST — evening slot (only used when POSTS_PER_DAY >= 2)
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run — plan only, no generation or posting"
+        type: boolean
+        default: false
+      slot:
+        description: "Slot override (1 = morning, 2 = evening; blank = auto)"
+        required: false
+        type: string
+      force:
+        description: "Re-run even if this slot already posted today"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reels-bot
+  cancel-in-progress: false
+
+jobs:
+  reels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run the reels bot
+        run: python3 automation/reels_bot.py
+        env:
+          # --- credentials (repo Settings → Secrets and variables) ---
+          OPENSHORTS_API_URL: ${{ vars.OPENSHORTS_API_URL }}
+          OPENSHORTS_API_KEY: ${{ secrets.OPENSHORTS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FAL_API_KEY: ${{ secrets.FAL_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          UPLOAD_POST_API_KEY: ${{ secrets.UPLOAD_POST_API_KEY }}
+          UPLOAD_POST_USER: ${{ secrets.UPLOAD_POST_USER }}
+          # --- knobs (optional; defaults are in automation/README.md) ---
+          PLATFORMS: ${{ vars.PLATFORMS }}
+          POSTS_PER_DAY: ${{ vars.POSTS_PER_DAY }}
+          MAX_MONTHLY_POSTS: ${{ vars.MAX_MONTHLY_POSTS }}
+          # --- manual dispatch inputs ---
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          SLOT_OVERRIDE: ${{ github.event.inputs.slot }}
+          FORCE_RERUN: ${{ github.event.inputs.force }}
+
+      - name: Commit state + log
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "openshorts-bot[bot]"
+          git config user.email "openshorts-bot[bot]@users.noreply.github.com"
+          git add automation/state
+          if git diff --cached --quiet; then
+            echo "no state changes to commit"
+          else
+            git commit -m "bot: state update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:main
+            echo "state committed and pushed"
+          fi

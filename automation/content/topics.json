@@ -1,0 +1,741 @@
+{
+  "defaults": {
+    "duration_seconds": 40,
+    "style": "educational",
+    "language": "en"
+  },
+  "hooks": [
+    "Nobody explains {subtopic} properly. So I will — in {duration} seconds.",
+    "If you're new to the market, this {subtopic} video can save you years.",
+    "I wish someone told me this about {subtopic} 5 years ago.",
+    "90% of people get {subtopic} wrong. Here's the 10% version.",
+    "Forget everything you heard about {subtopic}. Start here.",
+    "This one rule about {subtopic} changed how I trade.",
+    "The {subtopic} truth that changes everything.",
+    "Before your next trade, watch this {subtopic} explainer.",
+    "Your broker will never tell you this about {subtopic}.",
+    "Stop scrolling. {Subtopic}, in plain words."
+  ],
+  "angles": {
+    "1": {"name": "Myth-busting", "template": "Bust one specific myth: \"{myth}\". Explain clearly what is actually true."},
+    "2": {"name": "Mistake spotlight", "template": "Spotlight one costly mistake: \"{mistake}\". Explain why people make it and how to avoid it."},
+    "3": {"name": "Rule / checklist", "template": "Give exactly 3 short, practical rules around {subtopic}."},
+    "4": {"name": "Explain like I'm new", "template": "Explain {subtopic} with this everyday example: \"{example}\"."},
+    "5": {"name": "Number shock", "template": "Open with this real, verifiable fact: \"{stat}\". Then explain what it means."},
+    "6": {"name": "Comparison", "template": "Honestly compare {compare_a} vs {compare_b} for a beginner."},
+    "7": {"name": "Quiz / spot-it", "template": "Pose a quick mental quiz: can the viewer spot {spot}? Pause, then reveal the answer."},
+    "8": {"name": "Micro-story", "template": "Tell a 15-second story: \"{story}\" — and end with the one lesson it teaches."},
+    "9": {"name": "Timely explainer", "template": "Explain in plain words why this matters right now: {timely}."},
+    "10": {"name": "30-day challenge", "template": "Challenge the viewer: \"{challenge}\" — and explain what to expect over 30 days."}
+  },
+  "actors": [
+    {"name": "Priya", "gender": "female", "voice": "Rachel", "voice_id": "21m00Tcm4TlvDq8ikWAM", "desc": "Confident Indian woman in her early 30s, business-casual, warm and friendly smile, modern office background"},
+    {"name": "Arjun", "gender": "male", "voice": "Drew", "voice_id": "29vD33N1CtxCmqQRPOHJ", "desc": "Indian man in his late 20s, smart casual shirt, energetic and trustworthy, clean studio background"},
+    {"name": "Meera", "gender": "female", "voice": "Bella", "voice_id": "EXAVITQu4vr4xnSDxMaL", "desc": "Indian woman in her late 20s, soft-spoken and calm, casual ethnic wear, bright room"},
+    {"name": "Rohan", "gender": "male", "voice": "Antoni", "voice_id": "ErXwobaYiN019PkySvjV", "desc": "Indian man in his mid 30s, warm and reassuring, semi-formal, coffee shop background"},
+    {"name": "Kabir", "gender": "male", "voice": "Josh", "voice_id": "TxGEqnHWrfWFTfGW9XjX", "desc": "Indian man in his late 20s, deep-voiced and direct, minimal dark background"},
+    {"name": "Ananya", "gender": "female", "voice": "Rachel", "voice_id": "21m00Tcm4TlvDq8ikWAM", "desc": "Indian woman in her mid 20s, lively and energetic, casual denim, home studio"}
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "Stock Market Basics for Indian Beginners",
+      "short": "Market Basics",
+      "weight": 1.0,
+      "flavor": "hinglish",
+      "style": "educational",
+      "tagline": "One market concept a day keeps the confusion away.",
+      "subtopics": [
+        "what the stock market actually is",
+        "NSE and BSE explained",
+        "what NIFTY and SENSEX are",
+        "demat and trading accounts",
+        "how a stock's price actually moves",
+        "market cap: large, mid and small caps",
+        "what dividends are",
+        "bonus shares and stock splits",
+        "bull market vs bear market",
+        "how to read a trading screen"
+      ],
+      "myths": [
+        "You need lakhs of rupees to start investing",
+        "The stock market is just gambling",
+        "Blue-chip stocks can never fall"
+      ],
+      "mistakes": [
+        "Buying a stock only because the price looks cheap",
+        "Investing money you will need next month",
+        "Checking stock prices every five minutes"
+      ],
+      "stats": [
+        "India now has more than 15 crore demat accounts — more than most countries' populations",
+        "A Rs 10,000 monthly SIP at 12% for 20 years becomes roughly Rs 1 crore",
+        "NIFTY has delivered roughly 12-14% average yearly returns over the long term"
+      ],
+      "examples": [
+        "Buying a share is like owning a tiny slice of a famous chai franchise",
+        "SENSEX is simply a scoreboard of India's 30 biggest companies",
+        "A stock's price is what the last buyer and seller agreed on, like bargaining in a sabzi mandi"
+      ],
+      "comparisons": [
+        {"a": "a trading account", "b": "a demat account"},
+        {"a": "investing in a single stock", "b": "a mutual fund SIP"}
+      ],
+      "stories": [
+        "A friend started a Rs 1,000 SIP in 2015 and forgot about it — check what it quietly became",
+        "An uncle bought a hot tip stock without knowing what the company actually does"
+      ],
+      "challenges": [
+        "Write down NIFTY's closing level every day for 30 days",
+        "Learn one market term a day for 30 days"
+      ],
+      "timely": [
+        "why NIFTY moved sharply this week, without jargon",
+        "what new market rules mean for small investors"
+      ],
+      "spots": [
+        "the beginner mistake hidden in a typical first trade"
+      ],
+      "cta": [
+        "Follow for one market concept every day.",
+        "Comment START and I will send you a free beginner checklist.",
+        "Save this for your first trade.",
+        "Share this with one friend who thinks the market is gambling."
+      ],
+      "hashtags": ["#StockMarketBasics", "#ShareMarketIndia", "#Nifty", "#InvestingForBeginners", "#DematAccount"],
+      "extra_hooks": [
+        "Your first Rs 1,000 in the market — start here.",
+        "NIFTY explained in the time it takes to make chai."
+      ]
+    },
+    {
+      "id": "T2",
+      "name": "Candlesticks and Chart Patterns",
+      "short": "Chart Patterns",
+      "weight": 1.0,
+      "flavor": "hinglish",
+      "style": "educational",
+      "tagline": "One pattern a day keeps the noisy charts away.",
+      "subtopics": [
+        "candlestick anatomy: body and wick",
+        "bullish vs bearish candles",
+        "the doji candle",
+        "hammer and hanging man",
+        "engulfing patterns",
+        "support and resistance",
+        "head and shoulders",
+        "double top and double bottom",
+        "flags and triangles",
+        "fake breakouts"
+      ],
+      "myths": [
+        "A single candlestick can predict the market",
+        "A doji always means reversal",
+        "A big green candle means guaranteed profit"
+      ],
+      "mistakes": [
+        "Trading every single candle you see",
+        "Ignoring which timeframe you are on",
+        "Memorising 30 patterns but following zero rules"
+      ],
+      "stats": [
+        "A candle's body and wick tell you who won the battle: buyers or sellers",
+        "No chart pattern works all the time — context and volume decide",
+        "Beginners spot 10 patterns but follow 0 risk rules"
+      ],
+      "examples": [
+        "The candle body is the tug-of-war rope between buyers and sellers",
+        "A hammer at support is like buyers stepping in with a last-ball six",
+        "The wick is the rejected auction bid that did not stick"
+      ],
+      "comparisons": [
+        {"a": "a hammer", "b": "a shooting star"},
+        {"a": "a breakout with volume", "b": "a breakout without volume"}
+      ],
+      "stories": [
+        "A friend saw an engulfing pattern and went all-in without a stop-loss — one bad day later",
+        "Every perfect setup on a one-minute chart that ended up as pure noise"
+      ],
+      "challenges": [
+        "Spot one hammer and one doji on real charts every day for 30 days",
+        "Draw support and resistance on one NIFTY chart daily for 30 days"
+      ],
+      "timely": [
+        "what this week's last five daily candles on NIFTY suggest"
+      ],
+      "spots": [
+        "the fake breakout hidden in a typical chart setup"
+      ],
+      "cta": [
+        "Follow for one candlestick pattern every day.",
+        "Comment PATTERN and I will send you a free 7-pattern cheat sheet.",
+        "Save this before your next chart session.",
+        "Share this with a friend who still chases green candles."
+      ],
+      "hashtags": ["#CandlestickPatterns", "#PriceAction", "#ChartPatterns", "#TechnicalAnalysis", "#NiftyTrading"],
+      "extra_hooks": [
+        "This one candle appears before big moves — learn it.",
+        "Stop memorising 30 patterns. Learn these 3 first."
+      ]
+    },
+    {
+      "id": "T3",
+      "name": "Intraday Discipline and Risk",
+      "short": "Intraday Rules",
+      "weight": 1.0,
+      "flavor": "hinglish",
+      "style": "educational",
+      "tagline": "The market rewards rules, not reflexes.",
+      "subtopics": [
+        "what intraday trading really is",
+        "stop-loss: the non-negotiable",
+        "position sizing",
+        "risk-reward ratio",
+        "trading plan vs trading by mood",
+        "overtrading",
+        "entry quality vs exit quality",
+        "a daily loss limit",
+        "journaling your trades",
+        "the maths of losing streaks"
+      ],
+      "myths": [
+        "Intraday is a full-time income for most people",
+        "More trades mean more profit",
+        "A sure-shot intraday tip actually exists"
+      ],
+      "mistakes": [
+        "Trading without a stop-loss",
+        "Averaging down on losing trades",
+        "Letting one big win make you bet bigger"
+      ],
+      "stats": [
+        "SEBI's own study found roughly 9 in 10 individual F&O traders lost money",
+        "About 7 in 10 intraday cash traders lost money in the same SEBI study",
+        "Risking 1% per trade survives long losing streaks; risking 10% does not"
+      ],
+      "examples": [
+        "A stop-loss is the emergency brake on a bike — you don't ride without it",
+        "Risk-reward means betting Rs 1 to win Rs 2, minimum",
+        "A daily loss limit is the timer that ends a bad day early"
+      ],
+      "comparisons": [
+        {"a": "a written trading plan", "b": "trading by mood"},
+        {"a": "3 quality trades", "b": "15 random trades"}
+      ],
+      "stories": [
+        "The revenge trade that turned a minus Rs 500 day into a minus Rs 15,000 day",
+        "The trader who only trades the first hour and then logs off — profitably"
+      ],
+      "challenges": [
+        "Journal every trade for 30 days, even paper trades",
+        "Stop trading for the day the moment you hit your daily loss limit"
+      ],
+      "timely": [
+        "why this week's wild swings punish over-leveraged traders"
+      ],
+      "spots": [
+        "the revenge trade hiding in a typical losing day"
+      ],
+      "cta": [
+        "Follow for one risk rule every day.",
+        "Comment RULES and I will send you a free trading-plan template.",
+        "Save this before market opens tomorrow.",
+        "Share with a friend who trades without a stop-loss."
+      ],
+      "hashtags": ["#IntradayTrading", "#StopLoss", "#RiskManagement", "#TradingDiscipline", "#StockMarketIndia"],
+      "extra_hooks": [
+        "The first rule of intraday is not a strategy — it is this.",
+        "SEBI's own study says 9 in 10 F&O traders lose. Here is the fix."
+      ]
+    },
+    {
+      "id": "T4",
+      "name": "F&O and Options Explained Simply",
+      "short": "Options Basics",
+      "weight": 0.8,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "Derivatives decoded, not hyped.",
+      "subtopics": [
+        "what a derivative is",
+        "futures vs options",
+        "what a call option is",
+        "what a put option is",
+        "premium and strike price",
+        "expiry and lot size",
+        "option buying vs option selling",
+        "why most option buyers lose",
+        "what hedging means",
+        "margin rules for F&O"
+      ],
+      "myths": [
+        "Options are a quick way to get rich",
+        "Buying cheap far-OTM options is smart",
+        "You need options to make serious money"
+      ],
+      "mistakes": [
+        "Buying options with no idea what time decay is",
+        "Ignoring theta and expiry",
+        "Selling options without understanding margin"
+      ],
+      "stats": [
+        "SEBI's study found about 9 in 10 individual F&O traders lost money",
+        "Most bought options expire worthless — premium decays every single day",
+        "Option sellers win more often but lose big when they are wrong"
+      ],
+      "examples": [
+        "A call option is a token to buy at a fixed price, like a prepaid restaurant reservation",
+        "The premium is the price of that reservation ticket",
+        "Theta is the expiry-date countdown quietly draining the ticket's value"
+      ],
+      "comparisons": [
+        {"a": "option buying", "b": "option selling"},
+        {"a": "futures", "b": "options"}
+      ],
+      "stories": [
+        "The Rs 500 became Rs 50,000 screenshots that never show the losing side",
+        "The trader who bought an option on Tuesday and watched expiry eat it by Thursday"
+      ],
+      "challenges": [
+        "Paper-trade options for 30 days before using real money",
+        "Before every trade, write down the expiry, premium and max loss"
+      ],
+      "timely": [
+        "what expiry week does to option premiums"
+      ],
+      "spots": [
+        "the theta trap in a typical option trade"
+      ],
+      "cta": [
+        "Follow for jargon-free F&O explainers.",
+        "Comment OPTIONS and I will send you a free basics PDF.",
+        "Save this for expiry week.",
+        "Share with a friend who thinks options are lottery tickets."
+      ],
+      "hashtags": ["#OptionsTrading", "#FuturesAndOptions", "#OptionBasics", "#NiftyOptions", "#Derivatives"],
+      "extra_hooks": [
+        "Options without this one concept is just gambling.",
+        "SEBI says 9 in 10 F&O traders lose — here is why."
+      ]
+    },
+    {
+      "id": "T5",
+      "name": "Mutual Funds, SIPs and Compounding",
+      "short": "SIP & Funds",
+      "weight": 1.0,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "The boring plan that quietly builds crores.",
+      "subtopics": [
+        "what a mutual fund is",
+        "how a SIP works",
+        "the power of compounding",
+        "equity vs debt funds",
+        "index funds",
+        "expense ratio and NAV",
+        "ELSS and tax saving",
+        "lump sum vs SIP",
+        "withdrawing with an SWP",
+        "SIP myths"
+      ],
+      "myths": [
+        "SIPs can never lose money",
+        "Mutual funds are only for experts",
+        "A higher NAV means an expensive fund"
+      ],
+      "mistakes": [
+        "Stopping the SIP when the market falls",
+        "Chasing last year's top-performing fund",
+        "Investing with no goal and no timeline"
+      ],
+      "stats": [
+        "Rs 10,000 monthly at 12% for 20 years becomes roughly Rs 1 crore",
+        "India's monthly SIP book has crossed Rs 25,000 crore",
+        "The market's best days often come right after its worst — missing 10 best days cuts returns sharply"
+      ],
+      "examples": [
+        "A SIP is an automatic EMI into your own wealth",
+        "An index fund is buying the whole market in one packet",
+        "Compounding is a snowball that gets bigger the longer it rolls"
+      ],
+      "comparisons": [
+        {"a": "SIP", "b": "lump sum"},
+        {"a": "an active fund", "b": "an index fund"}
+      ],
+      "stories": [
+        "The investor who kept her SIP through the 2020 crash and the 2022 dip",
+        "The friend who stopped his SIP in a falling market and missed the recovery"
+      ],
+      "challenges": [
+        "Start a Rs 500 SIP this month and do not check it for 30 days",
+        "Write down one financial goal with a number and a date"
+      ],
+      "timely": [
+        "why SIP inflows keep hitting records even when markets fall"
+      ],
+      "spots": [
+        "the wrong reason to pick a fund"
+      ],
+      "cta": [
+        "Follow for one SIP insight every week.",
+        "Comment SIP and I will send you a free starter checklist.",
+        "Save this before your next salary credit.",
+        "Share with a friend who thinks investing needs lakhs."
+      ],
+      "hashtags": ["#SIP", "#MutualFunds", "#Compounding", "#IndexFunds", "#InvestingBasics"],
+      "extra_hooks": [
+        "Rs 1,000 a month can beat Rs 1 lakh parked idle — the SIP maths.",
+        "The boring plan that quietly makes crores."
+      ]
+    },
+    {
+      "id": "T6",
+      "name": "Technical Indicators",
+      "short": "Indicators",
+      "weight": 0.9,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "One indicator used right beats ten used wrong.",
+      "subtopics": [
+        "moving averages: SMA and EMA",
+        "RSI",
+        "MACD",
+        "Bollinger Bands",
+        "volume analysis",
+        "Fibonacci retracement",
+        "VWAP",
+        "the stochastic oscillator",
+        "ADX and trend strength",
+        "indicator combinations that actually help"
+      ],
+      "myths": [
+        "More indicators mean better trades",
+        "RSI below 30 always means buy",
+        "Indicators predict the future"
+      ],
+      "mistakes": [
+        "Stacking six indicators that all say the same thing",
+        "Trading every single crossover",
+        "Ignoring price action and staring at indicator colours"
+      ],
+      "stats": [
+        "RSI above 70 suggests overbought and below 30 oversold — a warning, not a signal",
+        "Indicators are derived from price, so they lag by design",
+        "Volume confirms breakouts — patterns without volume fail far more often"
+      ],
+      "examples": [
+        "A moving average is the average speed line of a stock's price",
+        "RSI is a speedometer for momentum",
+        "MACD is two trend lines racing each other"
+      ],
+      "comparisons": [
+        {"a": "RSI", "b": "MACD"},
+        {"a": "EMA", "b": "SMA"}
+      ],
+      "stories": [
+        "The trader whose eight-indicator screen froze every decision",
+        "The backtest that showed the same indicator failing 4 times out of 10"
+      ],
+      "challenges": [
+        "Master one indicator for 30 days using paper trades only",
+        "Remove all but two indicators from your chart for a month"
+      ],
+      "timely": [
+        "what NIFTY's RSI is saying this week"
+      ],
+      "spots": [
+        "the fake RSI signal in a typical chart"
+      ],
+      "cta": [
+        "Follow for one indicator deep-dive every week.",
+        "Comment RSI and I will send you a free indicator cheat sheet.",
+        "Save this for your next chart session.",
+        "Share with a friend whose chart looks like a rainbow."
+      ],
+      "hashtags": ["#RSI", "#MACD", "#TradingIndicators", "#TechnicalAnalysis", "#StockMarketTips"],
+      "extra_hooks": [
+        "RSI is not what most reels tell you.",
+        "One indicator, used right, beats ten used wrong."
+      ]
+    },
+    {
+      "id": "T7",
+      "name": "Trading Psychology and Common Mistakes",
+      "short": "Trader Mindset",
+      "weight": 1.0,
+      "flavor": "hinglish",
+      "style": "ugc",
+      "tagline": "The market does not take your money — habits do.",
+      "subtopics": [
+        "FOMO trades",
+        "revenge trading",
+        "averaging down on losers",
+        "cutting winners too early",
+        "overconfidence after a win streak",
+        "trading with borrowed money",
+        "following Telegram tips blindly",
+        "confirmation bias",
+        "expectations vs probability",
+        "the 90% losing stat and how to be the 10%"
+      ],
+      "myths": [
+        "Successful traders never lose",
+        "A winning streak means you are an expert",
+        "If a strategy worked once, it works always"
+      ],
+      "mistakes": [
+        "Revenge trading right after a loss",
+        "FOMO entries at the top",
+        "Averaging a losing position because it will surely come back"
+      ],
+      "stats": [
+        "SEBI's study: roughly 9 in 10 individual F&O traders lost money",
+        "The market is a device for transferring money from the impatient to the patient",
+        "Most blown accounts die from position size, not from bad entry signals"
+      ],
+      "examples": [
+        "FOMO is paying 5x for the last ticket because the show sold out",
+        "Revenge trading is chasing the thief who took Rs 500 and losing your wallet",
+        "Averaging down is doubling your bet after the first card lost"
+      ],
+      "comparisons": [
+        {"a": "a trader with a plan", "b": "a trader with emotions"}
+      ],
+      "stories": [
+        "The trader who lost six months of profits in three revenge trades",
+        "The disciplined trader who sat out a red week and came back fresher"
+      ],
+      "challenges": [
+        "For 30 days: no trade within 15 minutes of a loss",
+        "Write down your emotion before every trade for a month"
+      ],
+      "timely": [
+        "the psychology behind panic selling in this week's dip"
+      ],
+      "spots": [
+        "the FOMO entry hiding in a typical chasing trade"
+      ],
+      "cta": [
+        "Follow for daily trader-psychology reminders.",
+        "Comment CALM and I will send you a free pre-trade checklist.",
+        "Save this for your next red day.",
+        "Share with a friend who revenge-trades."
+      ],
+      "hashtags": ["#TradingPsychology", "#FOMO", "#TraderMindset", "#StockMarketMistakes", "#Discipline"],
+      "extra_hooks": [
+        "The market did not take your money — this habit did.",
+        "90% of trading is not strategy. It is this."
+      ]
+    },
+    {
+      "id": "T8",
+      "name": "IPOs and Primary Markets",
+      "short": "IPOs",
+      "weight": 0.4,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "IPOs are investments, not lottery tickets.",
+      "subtopics": [
+        "what an IPO is",
+        "why companies list on exchanges",
+        "how to apply: ASBA and UPI",
+        "allotment and listing day",
+        "what grey market premium really is",
+        "the listing-gains myth",
+        "IPO vs buying listed shares",
+        "red flags in a DRHP",
+        "SME IPOs",
+        "lock-in and anchor investors"
+      ],
+      "myths": [
+        "Every IPO gives listing gains",
+        "Grey market premium means guaranteed profit",
+        "Applying to every IPO is smart"
+      ],
+      "mistakes": [
+        "Applying for IPOs with borrowed money",
+        "Buying on listing day in pure euphoria",
+        "Never reading what the company actually does"
+      ],
+      "stats": [
+        "Plenty of IPOs have listed below their issue price — listing gains are never guaranteed",
+        "Grey market premium is unofficial and swings daily",
+        "Oversubscription numbers say more about hype than quality"
+      ],
+      "examples": [
+        "An IPO is a company's grand-opening sale of new shares to the public",
+        "The DRHP is the company's report card — read it before you pay",
+        "Listing day is the first day of free-market bargaining for the new shares"
+      ],
+      "comparisons": [
+        {"a": "an IPO", "b": "buying a listed stock"},
+        {"a": "an SME IPO", "b": "a mainboard IPO"}
+      ],
+      "stories": [
+        "The friend who got one lot in a hot IPO and sold on day one — versus the one who held for years",
+        "The investor who applied to every IPO without ever reading a DRHP"
+      ],
+      "challenges": [
+        "Read one DRHP summary this month before applying",
+        "Track every IPO you apply for and write down your real reason"
+      ],
+      "timely": [
+        "this week's big IPO, explained in 40 seconds"
+      ],
+      "spots": [
+        "the hype signal in a typical IPO frenzy"
+      ],
+      "cta": [
+        "Follow for every major IPO explained simply.",
+        "Comment IPO and I will send you a free application checklist.",
+        "Save this for listing day.",
+        "Share with a friend who applies to every IPO."
+      ],
+      "hashtags": ["#IPO", "#IPOAlert", "#PrimaryMarket", "#ListingGains", "#ShareMarketIndia"],
+      "extra_hooks": [
+        "IPOs are not lottery tickets — here is the real game.",
+        "Listing gains: the trap most new investors never see."
+      ]
+    },
+    {
+      "id": "T9",
+      "name": "Market News Explained",
+      "short": "Market News",
+      "weight": 0.6,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "Today's market move, without the panic.",
+      "subtopics": [
+        "why markets rise or fall on a given day",
+        "the Union Budget, simply",
+        "RBI rate decisions",
+        "inflation and CPI",
+        "the Fed and global cues",
+        "crude oil and the rupee",
+        "FII vs DII flows",
+        "earnings results",
+        "sector rotation",
+        "geopolitics and markets"
+      ],
+      "myths": [
+        "News always moves markets logically",
+        "Every RBI meeting crashes the market",
+        "You must trade every headline"
+      ],
+      "mistakes": [
+        "Trading the first minute of a headline reaction",
+        "Confusing global noise with India's story",
+        "Ignoring the economic calendar"
+      ],
+      "stats": [
+        "Markets often reverse after knee-jerk reactions to news",
+        "RBI policy days bring higher volatility — plan, do not gamble",
+        "Most of a stock's big moves cluster around earnings days"
+      ],
+      "examples": [
+        "A rate hike is costlier money — like EMIs going up for everyone",
+        "FII selling is simply foreign money leaving the table",
+        "Inflation is the hidden tax that shrinks every rupee"
+      ],
+      "comparisons": [
+        {"a": "an RBI rate cut", "b": "an RBI rate hike"},
+        {"a": "FII flows", "b": "DII flows"}
+      ],
+      "stories": [
+        "The trader who bought the great-news top and learned the word priced-in",
+        "The investor who slept through a red headline day and kept her SIP running"
+      ],
+      "challenges": [
+        "Follow one economic calendar event every week for 30 days",
+        "Before reacting to a headline, wait 30 minutes"
+      ],
+      "timely": [
+        "why the market fell or rose today — the honest 40-second version"
+      ],
+      "spots": [
+        "the overreaction in a typical headline-driven move"
+      ],
+      "cta": [
+        "Follow for daily market news without jargon.",
+        "Comment NEWS and I will send you a free event calendar.",
+        "Save this for the next RBI day.",
+        "Share with a friend who panics at every red candle."
+      ],
+      "hashtags": ["#StockMarketNews", "#NiftyToday", "#MarketUpdate", "#RBI", "#Sensex"],
+      "extra_hooks": [
+        "RBI, inflation, FII — decoded in plain words.",
+        "Today's market move, explained without the panic."
+      ]
+    },
+    {
+      "id": "T10",
+      "name": "Personal Finance and Taxes for Investors",
+      "short": "Tax & Finance",
+      "weight": 0.6,
+      "flavor": "english",
+      "style": "educational",
+      "tagline": "First protect the salary, then trade the market.",
+      "subtopics": [
+        "salary first, trading second",
+        "emergency fund before stocks",
+        "the 50-30-20 split",
+        "tax on intraday and F&O income",
+        "STCG vs LTCG",
+        "tax on dividends",
+        "Section 80C and ELSS",
+        "advance tax for traders",
+        "filing ITR as an investor",
+        "insurance before investing"
+      ],
+      "myths": [
+        "Small intraday profits are tax-free",
+        "Long-term gains always mean no tax",
+        "Filing ITR is optional for small traders"
+      ],
+      "mistakes": [
+        "Not knowing the difference between STCG and LTCG",
+        "Ignoring advance tax on trading income",
+        "Investing without an emergency fund"
+      ],
+      "stats": [
+        "Long-term capital gains above Rs 1.25 lakh a year on equities are taxed",
+        "Intraday and F&O income is treated as business income, not capital gains",
+        "Even a losing trading year still needs ITR filing when turnover crosses limits"
+      ],
+      "examples": [
+        "STCG vs LTCG is a short hotel stay vs a long one — different rates apply",
+        "An emergency fund is the airbag that lets you invest calmly",
+        "Advance tax is paying the tax bill in instalments instead of one painful lump"
+      ],
+      "comparisons": [
+        {"a": "STCG", "b": "LTCG"},
+        {"a": "ELSS", "b": "other 80C options"}
+      ],
+      "stories": [
+        "The trader who made Rs 2 lakh intraday and forgot about advance tax",
+        "The salaried investor who claimed every 80C rupee properly"
+      ],
+      "challenges": [
+        "Track every trade's profit and loss for 30 days",
+        "Set aside your emergency fund amount this month"
+      ],
+      "timely": [
+        "the three tax moves every investor should check before March"
+      ],
+      "spots": [
+        "the tax mistake in a typical first-year trader's story"
+      ],
+      "cta": [
+        "Follow for investor tax tips — always consult a CA for your case.",
+        "Comment TAX and I will send you a free investor tax checklist.",
+        "Save this before March.",
+        "Share with a friend who has never filed ITR for trading."
+      ],
+      "hashtags": ["#IncomeTax", "#TaxSaving", "#STCG", "#PersonalFinance", "#ITR"],
+      "extra_hooks": [
+        "Made money trading? The tax part nobody tells you.",
+        "The March checklist every investor needs."
+      ]
+    }
+  ]
+}
