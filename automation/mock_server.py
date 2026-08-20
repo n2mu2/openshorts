@@ -65,21 +65,51 @@ RSS_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
 <title>Mock News</title><link>http://127.0.0.1:8099</link><description>test feed</description>
 <item>
+ <title>US Fed keeps rates steady, signals patient stance</title>
+ <link>http://mock.test/fed-rates</link>
+ <pubDate>Thu, 21 Aug 2026 05:30:00 +0530</pubDate>
+ <description>The US Federal Reserve held interest rates steady overnight and signalled a patient approach.</description>
+</item>
+<item>
+ <title>Wall Street ends lower as tech shares slide</title>
+ <link>http://mock.test/wallstreet-tech</link>
+ <pubDate>Thu, 21 Aug 2026 05:00:00 +0530</pubDate>
+ <description>US stocks closed lower overnight with technology shares leading the decline.</description>
+</item>
+<item>
+ <title>Crude oil prices rise on supply worries</title>
+ <link>http://mock.test/crude-rise</link>
+ <pubDate>Thu, 21 Aug 2026 04:30:00 +0530</pubDate>
+ <description>Oil prices climbed as traders weighed supply concerns from key producers.</description>
+</item>
+<item>
+ <title>Gold hits fresh record high, dollar steady</title>
+ <link>http://mock.test/gold-record</link>
+ <pubDate>Thu, 21 Aug 2026 04:00:00 +0530</pubDate>
+ <description>Gold prices touched a new record while the dollar index held steady.</description>
+</item>
+<item>
+ <title>Asian markets mixed as China data disappoints</title>
+ <link>http://mock.test/asia-mixed</link>
+ <pubDate>Thu, 21 Aug 2026 03:30:00 +0530</pubDate>
+ <description>Asian equities traded mixed with Chinese economic data coming in below expectations.</description>
+</item>
+<item>
  <title>NIFTY ne banaya naya record, Sensex 200 points up</title>
  <link>http://mock.test/nifty-record</link>
- <pubDate>Thu, 21 Aug 2026 09:00:00 +0530</pubDate>
- <description>Stock markets closed at a fresh high today with NIFTY gaining 0.5% led by banking stocks.</description>
+ <pubDate>Thu, 21 Aug 2026 03:00:00 +0530</pubDate>
+ <description>Stock markets closed at a fresh high today with NIFTY gaining led by banking stocks.</description>
 </item>
 <item>
  <title>UPSC EPFO APFC Recruitment 2026: 80 पदों के लिए ऑनलाइन आवेदन शुरू</title>
  <link>http://mock.test/upsc-jobs</link>
- <pubDate>Thu, 21 Aug 2026 08:30:00 +0530</pubDate>
+ <pubDate>Thu, 21 Aug 2026 02:30:00 +0530</pubDate>
  <description>Jobs notification details for government recruitment.</description>
 </item>
 <item>
  <title>RBI keeps repo rate unchanged at 6.5%</title>
  <link>http://mock.test/rbi-rate</link>
- <pubDate>Thu, 21 Aug 2026 07:00:00 +0530</pubDate>
+ <pubDate>Thu, 21 Aug 2026 02:00:00 +0530</pubDate>
  <description>The central bank held the policy rate steady for the third straight meeting.</description>
 </item>
 </channel></rss>"""

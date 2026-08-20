@@ -248,9 +248,16 @@ investor · S10 Insurance before investing.
 | Aggressive | 5 | ~5.5 years |
 | Max (AI-assisted) | 10 | ~2.7 years |
 
-**Recommended mix:** 3 evergreen (T1–T7 rotation) + 1 timely (T9/T8) per day.
-Best posting windows (IST): **8–9 AM** (pre-market), **12–1 PM** (lunch), **7–9 PM**
-(post-market recap). Use the app's scheduling sheet (date/time/Asia/Kolkata).
+**Current production cadence (as of v4): 6 reels/day, every 4 hours** —
+08:30 · 12:30 · 16:30 · 20:30 · 00:30 · 04:30 IST.
+
+- **08:30 IST = 🌍 world-news morning brief**: overnight global + domestic
+  stories as unique bullet points, each mapped to an Indian **sector**
+  (never stocks) — see `automation/README.md` §4.
+- **Slots 2–6 = evergreen mix** across the 10-topic bank.
+- Note: 04:30 IST is a low-engagement posting hour; the 4-hour grid was chosen
+  for cadence discipline. If engagement data says otherwise later, reshuffle
+  the grid.
 
 ---
 

@@ -11,10 +11,11 @@ State and logs are committed back to this repo, so every decision — including
 rejections — is auditable in git.
 
 ```
-GitHub cron (08:30 & 19:00 IST)
+GitHub cron — 6 slots/day, every 4 hours (08:30 · 12:30 · 16:30 · 20:30 · 00:30 · 04:30 IST)
         │
-        ├─ NEWS (slot 1): sarkarikyp.com · Google News · Moneycontrol · ET · Livemint
-        └─ BANK (slot 2): automation/content/topics.json (10 topics × 1,000 reels)
+        ├─ SLOT 1 (08:30 IST): WORLD-NEWS MORNING BRIEF — overnight US/Asia/oil/gold/dollar
+        │      + domestic stories → unique bullet points, each mapped to an Indian SECTOR
+        └─ SLOTS 2-6: evergreen bank reels (10 topics × 1,000 reels each)
         │
         ▼
 automation/reels_bot.py
@@ -123,27 +124,40 @@ subtitles, Hindi speech → English subtitles).
 
 ---
 
-## 4. News reels (latest news, attributed)
+## 4. The 08:30 IST world-news morning brief (bullet points × sectors)
 
-The **morning slot (08:30 IST)** posts a reel built from the freshest
-market-relevant story across these sources (editable in
-`automation/content/news_sources.json`):
+The morning slot assembles a **multi-story brief** — everything that happened
+overnight, in India and around the world, that can move Indian markets — from
+these sources (editable in `automation/content/news_sources.json`):
 
 | Source | What it catches |
 |---|---|
-| **Sarkari KYP** (`sarkarikyp.com/feed/`) | Hindi govt schemes, yojana, subsidy, pension, EPF/PPF updates |
-| **Google News — Indian Markets** | NIFTY/SENSEX/stock-market headlines, 1 day |
+| **Google News — Global Markets Overnight** | Wall Street, Nasdaq, Dow, US Fed (12h) |
+| **Google News — Oil Gold Dollar** | Crude oil, gold price, dollar index, rupee (12h) |
+| **Google News — Asia Markets** | Nikkei, Hang Seng, Shanghai, China (12h) |
+| **Google News — Indian Markets** | NIFTY/SENSEX/stock-market headlines (1d) |
 | **Google News — Economy & Policy** | RBI, SEBI, Budget, inflation, GST |
-| **Google News — Hindi Markets** | Hindi stock-market headlines |
-| **Google News — Schemes & Subsidies** | Yojana/subsidy/pension (Hindi) |
+| **Google News — Hindi Markets / Schemes** | Hindi market + yojana/subsidy headlines |
+| **Sarkari KYP** (`sarkarikyp.com/feed/`) | Hindi govt schemes, yojana, subsidy, pension, EPF/PPF updates |
 | **Moneycontrol / Economic Times / Livemint** | Market wraps & macro |
 
-Rules baked in: the script may **only use facts present in the source text**
-(the verifier enforces this), the reel **attributes the source** ("news reports
-say" / "khabaron ke mutabik"), the caption carries the source name + link, and
-no invented numbers are allowed. Stories already used are never repeated
-(tracked in state). If no fresh story matches, the bot falls back to the
-evergreen bank instead of stalling.
+**The reel format (mandatory, enforced by the verifier):**
+- **Unique bullet points** — 3-4 bullets, each covering a *different* news
+  story; no story appears twice, no story is ever reused across days
+  (`news_used` dedup).
+- **Sector mapping** — every bullet ends with `-> Sector: <sector>`, chosen
+  from a 25-sector Indian taxonomy (Banking, IT Services, Pharma, Auto,
+  Metals, Oil & Gas, Realty & Infra, Telecom, Defence, Agri, Tourism…).
+- **No stocks, ever** — sectors only; company names are banned in the brief,
+  the script prompt, and the verification checklist.
+- **Only source facts** — no invented numbers (verifier checks every bullet
+  against the source items).
+- Attribution ("news reports say" / "khabaron ke mutabik"), bilingual flip,
+  mid-roll question and comment CTA stay as in every reel. The micro-story
+  rule is waived for this format (bullets replace it) — the verifier knows.
+
+If no fresh story matches, the bot falls back to the evergreen bank instead
+of stalling.
 
 ---
 
@@ -248,43 +262,64 @@ second batch.
 
 ---
 
-## 5. Schedule
+## 5. Schedule — 6 reels/day, every 4 hours
 
-| Cron (UTC) | IST | Slot |
-|---|---|---|
-| `0 3 * * *` | 08:30 | Morning — **news reel** (fresh headlines) |
-| `30 13 * * *` | 19:00 | Evening — **evergreen bank reel** (active when `POSTS_PER_DAY=2`) |
+| Cron (UTC) | IST | Slot | Content |
+|---|---|---|---|
+| `0 3 * * *` | **08:30** | 1 | 🌍 **World-news morning brief** — everything that happened overnight/globally that can move Indian markets, as unique bullet points mapped to **sectors** (never stocks) |
+| `0 7 * * *` | 12:30 | 2 | Evergreen bank reel |
+| `0 11 * * *` | 16:30 | 3 | Evergreen bank reel |
+| `0 15 * * *` | 20:30 | 4 | Evergreen bank reel (post-market) |
+| `0 19 * * *` | 00:30 | 5 | Evergreen bank reel |
+| `0 23 * * *` | 04:30 | 6 | Evergreen bank reel |
+
+`POSTS_PER_DAY` defaults to **6** (set it lower to trim slots from the end).
+The morning brief pulls **multiple stories** (up to 6, max 2 per source) from
+global feeds — US Fed/Wall Street, oil & gold & dollar, Asian markets — plus
+Indian sources (Google News IN, sarkarikyp.com, Moneycontrol, ET, Livemint),
+deduped forever via `news_used`. Every bullet in the reel is a distinct story,
+ends with `-> Sector: <sector>` (from a 25-sector Indian taxonomy), and the
+verifier enforces: bullets traceable to the source items, sectors only,
+**no stock names**.
 
 Notes:
 - GitHub scheduled runs are **best-effort** — usually on time, occasionally
-  delayed ~15–60 min under load. For hard-exact timing, run `automation/run.sh`
-  from a server cron instead (`.env` file, git-ignored).
+  delayed. The bot assigns each run to its 4-hour grid window, so a delayed
+  run never posts two reels back-to-back out of schedule. If GitHub's
+  best-effort timing matters for you, run `automation/run.sh` from a server
+  cron for exact timing.
 - Scheduled workflows are paused after 60 days of repo inactivity — the bot's
   own state commits keep the repo active.
-- Manual runs: **Actions → Reels Bot → Run workflow** (dry-run / slot / force).
+- Manual runs: **Actions → Reels Bot → Run workflow** (dry-run / slot 1-6 /
+  force).
 
 ### Alternative: your own server cron
 
 ```cron
-30 8  * * *  cd /path/to/openshorts/automation && ./run.sh >> /var/log/reels-bot.log 2>&1
-0 19  * * *  cd /path/to/openshorts/automation && ./run.sh >> /var/log/reels-bot.log 2>&1
+30 8  * * *  cd /path/to/openshorts/automation && ./run.sh --slot 1 >> /var/log/reels-bot.log 2>&1
+30 12 * * *  cd /path/to/openshorts/automation && ./run.sh --slot 2 >> /var/log/reels-bot.log 2>&1
+30 16 * * *  cd /path/to/openshorts/automation && ./run.sh --slot 3 >> /var/log/reels-bot.log 2>&1
+30 20 * * *  cd /path/to/openshorts/automation && ./run.sh --slot 4 >> /var/log/reels-bot.log 2>&1
+30 0  * * *  cd /path/to/openshorts/automation && ./run.sh --slot 5 >> /var/log/reels-bot.log 2>&1
+30 4  * * *  cd /path/to/openshorts/automation && ./run.sh --slot 6 >> /var/log/reels-bot.log 2>&1
 ```
 
 ---
 
-## 6. Costs (self-check before you switch it on)
+## 6. Costs at 6 reels/day (self-check before you switch it on)
 
 | Item | Approx. | Notes |
 |---|---|---|
-| OpenShorts hosted plan | $12+/mo | Paid tier unlocks AI Shorts + API keys + managed Upload-Post |
-| fal.ai generation | **~$0.65/reel** (`lowcost`) | The real per-post cost. 1/day ≈ $20/mo. `premium` ≈ $2/reel. |
-| ElevenLabs | Free tier | Enough for 1–2 reels/day; Sarah multilingual voice is a free premade voice |
-| Google Gemini | Free tier | Script writing + verification ≈ 2 calls per reel; free tier covers ~1,000+ reels/day of this volume |
-| Upload-Post | Free 10 posts/mo → paid tiers | Set `MAX_MONTHLY_POSTS=10` if staying free |
-| GitHub Actions | Free tier is plenty | ~15 min/run, 30–60 runs/mo |
+| fal.ai generation | **~$3.90/day ≈ $117/mo** (`lowcost`) | The dominant cost at 6/day. `premium` ≈ $2/reel (3×). |
+| OpenShorts hosted plan | $12+/mo + minutes | 6×21s ≈ 2.1 min/day ≈ 65 min/mo — pick a plan covering that |
+| ElevenLabs | **Creator plan (~$22/mo)** | 6 reels × ~30s voice ≈ 90 min/mo — free tier (10 min) is NOT enough |
+| Gemini | Free tier | 2 calls/reel × 6/day — free tier covers this volume |
+| Upload-Post | Paid tier | 180 posts/mo needs a paid tier; free = 10/mo |
+| GitHub Actions | Free tier (2000 min/mo) | 6 runs/day × ~5-10 min ≈ 90-180 min/mo — fine, but watch it |
 
-Dry-run is free: **Actions → Reels Bot → Run workflow → dry_run = true** prints
-the exact plan (news item, language order, brief, caption) without any API spend.
+**Total ≈ $150-160/mo at 6/day** — that's the honest operating cost of this
+cadence. Start at 6/day only when the page earns it; `POSTS_PER_DAY=2` costs
+≈ $50/mo. Dry-run is free (Actions → Reels Bot → Run workflow → dry_run).
 
 ---
 

@@ -9,9 +9,32 @@
     "fd rate", "loan", "लोन", "pension", "पेंशन", "yojana", "योजना", "subsidy", "सब्सिडी",
     "kisan", "किसान", "lpg", "एलपीजी", "ppf", "epf", "provident fund", "भविष्य निधि",
     "insurance", "बीमा", "investment", "निवेश", "profit", "मुनाफा", "markets", "market wrap",
-    "fii", "dii", "दलाल स्ट्रीट", "dalal street", "sbi", "लाभांश", "dividend"
+    "fii", "dii", "दलाल स्ट्रीट", "dalal street", "sbi", "लाभांश", "dividend",
+    "wall street", "nasdaq", "dow jones", "s&p 500", "federal reserve", "fed rate",
+    "china", "asian markets", "nikkei", "hang seng", "shanghai", "europe", "ecb",
+    "opec", "gold price", "सोने की कीमत", "crude oil", "कच्चा तेल", "dollar index",
+    "tariff", "टैरिफ", "trade war", "imf", "world bank", "recession", "मंदी",
+    "global markets", "overnight", "foreign investors", "fpi", "forex", "बॉन्ड", "bond yield"
   ],
   "sources": [
+    {
+      "name": "Google News — Global Markets Overnight",
+      "url": "https://news.google.com/rss/search?q=wall%20street%20OR%20nasdaq%20OR%20%22dow%20jones%22%20OR%20federal%20reserve%20when%3A12h&hl=en-IN&gl=IN&ceid=IN:en",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Google News — Oil Gold Dollar",
+      "url": "https://news.google.com/rss/search?q=crude%20oil%20OR%20gold%20price%20OR%20%22dollar%20index%22%20OR%20rupee%20when%3A12h&hl=en-IN&gl=IN&ceid=IN:en",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Google News — Asia Markets",
+      "url": "https://news.google.com/rss/search?q=nikkei%20OR%20%22hang%20seng%22%20OR%20shanghai%20OR%20%22asian%20markets%22%20OR%20china%20when%3A12h&hl=en-IN&gl=IN&ceid=IN:en",
+      "type": "rss",
+      "lang": "en"
+    },
     {
       "name": "Google News — Indian Markets",
       "url": "https://news.google.com/rss/search?q=%22stock%20market%22%20OR%20nifty%20OR%20sensex%20OR%20share%20market%20when%3A1d&hl=en-IN&gl=IN&ceid=IN:en",

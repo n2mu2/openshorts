@@ -73,8 +73,8 @@ ELEVENLABS_KEY = env("ELEVENLABS_API_KEY")           # self-host BYOK
 UP_KEY = env("UPLOAD_POST_API_KEY")                  # self-host BYOK
 UP_USER = env("UPLOAD_POST_USER")                    # self-host profile
 PLATFORMS = [p.strip() for p in env("PLATFORMS", "instagram").split(",") if p.strip()]
-POSTS_PER_DAY = max(1, int(env("POSTS_PER_DAY", "1") or 1))
-MAX_MONTHLY_POSTS = max(1, int(env("MAX_MONTHLY_POSTS", "30") or 30))
+POSTS_PER_DAY = max(1, int(env("POSTS_PER_DAY", "6") or 6))
+MAX_MONTHLY_POSTS = max(1, int(env("MAX_MONTHLY_POSTS", "186") or 186))
 MAX_WAIT_MINUTES = max(5, int(env("MAX_WAIT_MINUTES", "55") or 55))
 VIDEO_MODE = env("VIDEO_MODE", "lowcost") or "lowcost"
 FORCE = env("FORCE_RERUN", "false").lower() in ("1", "true", "yes")
@@ -273,7 +273,11 @@ def pick_influencer(spec: dict, influencers: list) -> dict:
         if not roster:
             roster = influencers
         return roster[spec["counter"] % len(roster)]
-    digest = int(spec["news"]["hash"], 16)
+    items = (spec.get("news") or {}).get("items") or []
+    if items:
+        digest = int(items[0]["hash"], 16)
+        return influencers[digest % len(influencers)]
+    digest = int(spec.get("news", {}).get("hash", "0"), 16)
     return influencers[digest % len(influencers)]
 
 
@@ -513,49 +517,78 @@ def pick_news(state: dict) -> dict | None:
                 "score": news_date_score(it, len(candidates)) + hits * 3600 * 6,
             })
     if not candidates:
-        return None
+        return []
     candidates.sort(key=lambda c: -c["score"])
-    last_source = state["history"][-1].get("source") if state["history"] else None
-    best = candidates[0]
-    if best["source"] == last_source and len(candidates) > 1:
-        best = candidates[1]
-    return best
+    # Take the top stories with source variety (max 2 per source, cap 6):
+    # the morning brief needs several distinct world/domestic items.
+    picked, per_source = [], {}
+    for c in candidates:
+        if per_source.get(c["source"], 0) >= 2:
+            continue
+        picked.append(c)
+        per_source[c["source"]] = per_source.get(c["source"], 0) + 1
+        if len(picked) >= 6:
+            break
+    return picked
 
 
-def build_news_spec(item: dict, date_str: str, slot: int, rng: random.Random) -> dict:
-    source_text = item["title"]
-    if item["desc"]:
-        source_text += "\n" + item["desc"]
+def build_news_spec(items: list, date_str: str, slot: int, rng: random.Random) -> dict:
+    """Morning world-news brief: several overnight/global stories mapped to the
+    Indian sectors they can affect. Bullet format, sectors only, no stocks."""
+    lines = []
+    for it in items:
+        desc = f" - {it['desc'][:400]}" if it["desc"] else ""
+        lines.append(f"[{it['source']}] {it['title']}{desc}")
+    source_text = "\n".join(lines)
+
+    sectors = (
+        "Banking & Financials, NBFC & Microfinance, Insurance, IT Services, Pharma & Healthcare, "
+        "Auto & Ancillaries, FMCG, Consumer Durables, Metals & Mining, Oil & Gas, Power & Utilities, "
+        "Renewable Energy, Realty & Infra, Cement, Capital Goods, Telecom, Aviation, Logistics & Shipping, "
+        "Textiles & Apparel, Chemicals & Fertilisers, Agri & Food Processing, Defence, Tourism & Hospitality, "
+        "Gems & Jewellery, Media & Entertainment, Education"
+    )
     brief = (
-        "You are turning this NEWS ITEM into an educational reel:\n"
-        f"SOURCE: {item['source']}\nNEWS TEXT:\n{source_text}\n\n"
+        "You are turning today's overnight WORLD NEWS into the morning market brief for Indian retail investors.\n"
+        "NEWS ITEMS (each line is one separate source fact):\n" + source_text + "\n\n"
         "STRICT RULES:\n"
-        "1. Use ONLY facts stated in the NEWS TEXT above. If it lacks numbers, do not invent any.\n"
-        "2. Frame it educationally: what happened, and what it could mean for retail investors "
-        "in simple terms. No predictions of guaranteed outcomes, no 'buy/sell', no stock picks.\n"
-        "3. Attribute the news in the narration once, e.g. 'news reports say' / 'khabaron ke mutabik'.\n"
-        "4. Keep it honest: if the news is about a scheme/rule change, explain who it affects.\n"
-        "5. Never claim certainty about market direction.\n"
+        "1. Use ONLY facts stated in the NEWS ITEMS above. Never invent numbers, events or figures.\n"
+        "2. FORMAT = UNIQUE BULLET POINTS: the narration of the solution and demo segments must carry "
+        "3-4 bullets in total, each bullet covering ONE distinct news item above (no item used twice).\n"
+        "3. Every bullet MUST end with the related Indian market sector in exactly this format: "
+        "\" -> Sector: <sector>\". Choose sectors ONLY from this list: " + sectors + ".\n"
+        "4. NEVER name specific stocks, companies or brands. Sectors only.\n"
+        "5. Frame every bullet as an informational cue for the market open - not a prediction, not a tip.\n"
+        "6. Attribute the news once in the hook, e.g. 'news reports say' / 'khabaron ke mutabik'.\n"
+        "7. Keep every bullet to one short sentence so it fits on screen.\n"
+        "8. Education only, good faith, no panic, no guaranteed market direction.\n"
     )
     lang_order = rng.choice(["hi-en", "en-hi"])
-    digest = item["hash"]
+    digest = items[0]["hash"]
     return {
         "reel_id": f"N-{date_str.replace('-', '')}-{slot}-{digest[:6]}",
         "kind": "news",
         "topic_id": None,
-        "topic": f"News: {item['source']}",
-        "subtopic": item["title"][:60],
-        "hook": item["title"][:90],
-        "angle": "Timely explainer",
+        "topic": "Morning world-news brief",
+        "subtopic": f"{len(items)} market-moving stories",
+        "hook": items[0]["title"][:90],
+        "angle": "Bullet brief",
         "brief": brief,
-        "ground_truth": f"SOURCE TEXT (only this may be used as fact):\n{source_text}",
-        "caption_top": item["title"][:110],
+        "ground_truth": "SOURCE ITEMS (only these may be used as fact):\n" + source_text,
+        "caption_top": "\U0001F305 Morning brief - what moved overnight and which sectors to watch:",
         "hashtags": ["#StockMarketNews", "#NiftyToday", "#MarketUpdate", "#ShareMarketIndia"],
-        "actor": {},  # filled below
+        "actor": {},
         "counter": 0,
         "lang_order": lang_order,
         "duration": 20,
-        "news": {"source": item["source"], "link": item["link"], "hash": item["hash"], "date": item["date"]},
+        "bullet_style": True,
+        "news": {
+            "items": [
+                {"source": it["source"], "link": it["link"], "hash": it["hash"],
+                 "title": it["title"], "date": it["date"]}
+                for it in items
+            ],
+        },
     }
 
 
@@ -624,8 +657,10 @@ def engagement_warnings(script: dict) -> list:
         cta_blob = (cta + " " + cta_sub).lower()
         if "?" not in problem and "?" not in problem_sub:
             warnings.append("problem segment has no viewer question")
-        if len(solution.split()) < 12:
-            warnings.append("solution segment looks too short for a micro-story/example")
+        # bullet-brief reels put news bullets in the solution instead of a
+        # micro-story; detect them via the 'Sector' marker and waive the check.
+        if len(solution.split()) < 12 and "sector" not in solution.lower():
+            warnings.append("solution segment looks too short for a micro-story/example (or missing bullets for a news brief)")
         comment_cues = ("?", "comment", "batao", "likho", "karo", "answer", "yes", "no")
         if not any(cue in cta_blob for cue in comment_cues):
             warnings.append("CTA segment has no comment-inviting question")
@@ -674,6 +709,19 @@ def build_script(spec: dict) -> dict:
         "4. Keep the whole reel conversational - like one person talking to a friend, "
         "not reading a textbook.\n"
     )
+    if spec.get("bullet_style"):
+        engagement_rules = (
+            "ENGAGEMENT RULES (bullet-brief edition, mandatory):\n"
+            "1. The problem segment must end with a direct question to the viewer "
+            "(e.g. 'Ready for the market open?' / 'Market khulne se pehle ready?').\n"
+            "2. The solution and demo segments ARE the bullet list: first half of the "
+            "bullets in solution, second half in demo. Each bullet = one short sentence "
+            "ending exactly with ' -> Sector: <sector>' (use the sector list from the brief).\n"
+            "3. The CTA segment must end with a comment-inviting question "
+            "(e.g. 'Which sector surprised you today? Comment it').\n"
+            "4. Conversational briefing tone - like a friend catching you up before "
+            "the market opens. No micro-story needed in this format.\n"
+        )
 
     actor_desc = spec.get("actor_desc", "Indian professional in their late 20s, friendly and trustworthy, casual modern clothing")
 
@@ -722,10 +770,22 @@ VERIFY_SYSTEM = (
 
 def verify_script(script: dict, spec: dict) -> tuple:
     """Returns (verdict, script). verdict in approve|reject. Raises if Gemini fails."""
+    format_rule = ""
+    if spec.get("bullet_style"):
+        format_rule = (
+            "BULLET-BRIEF FORMAT: this is a morning news brief. The solution and demo "
+            "segments must contain 3-4 distinct bullet lines, each ending with "
+            "'-> Sector: ...' and each traceable to a DIFFERENT source item in the "
+            "GROUND TRUTH. Sectors must come from the allowed sector list. "
+            "The micro-story/example requirement is waived for this reel.\n"
+        )
+
     for attempt in range(1, VERIFY_MAX_ATTEMPTS + 1):
         prompt = f"""TASK: VERIFY (attempt {attempt}/{VERIFY_MAX_ATTEMPTS})
 
 You are reviewing a reel BEFORE it is published to Instagram. Decide approve / fix / reject.
+
+{format_rule}
 
 GROUND TRUTH (facts the script is allowed to use):
 {spec['ground_truth']}
@@ -747,6 +807,9 @@ AUDIT CHECKLIST — flag every violation:
 6. ENGAGEMENT: the problem segment ends with a direct question to the viewer; the
    solution segment opens with a micro-story or example; the CTA ends with a
    comment-inviting question; the tone is conversational, not textbook.
+   (If BULLET-BRIEF FORMAT applies below, the micro-story rule is waived and the
+   solution/demo segments must instead carry the 3-4 bullet lines ending with
+   '-> Sector: ...', each traceable to a DIFFERENT source item in the GROUND TRUTH.)
 7. PERSONA: the narration is first-person and consistent with the influencer's stated
    age/profession/city; the catchphrase appears naturally once; no cringe or
    age-inappropriate slang for the persona's age.
@@ -789,17 +852,24 @@ def pick_voice(bilingual: bool) -> str:
 
 
 # ------------------------------------------------------------------ slots
+SLOT_GRID_START_UTC = 3  # 03:00 UTC = 08:30 IST; six slots, every 4 hours
+
+
 def resolve_slot(args, state: dict, today: str) -> int:
+    """6 slots/day on a fixed 4-hour grid starting 03:00 UTC (08:30 IST).
+    A run is assigned to the grid window its start time falls in, so a delayed
+    run keeps its own window instead of jumping ahead and breaking the interval.
+    """
     if args.slot:
         return args.slot
     override = env("SLOT_OVERRIDE")
     if override:
         return int(override)
     hour = datetime.now(UTC).hour
-    if 1 <= hour <= 6:
-        return 1
-    if 12 <= hour <= 16:
-        return 2
+    # 03:00→1, 07:00→2, 11:00→3, 15:00→4, 19:00→5, 23:00→6
+    auto = ((hour - SLOT_GRID_START_UTC) % 24) // 4 + 1
+    if auto <= POSTS_PER_DAY:
+        return auto
     posted = {(h["date"], h["slot"]) for h in state["history"] if h.get("status") in ("posted", "skipped", "rejected")}
     for s in range(1, POSTS_PER_DAY + 1):
         if (today, s) not in posted:
@@ -835,15 +905,15 @@ def run_once(content: dict, state: dict, args) -> int:
 
     # ------------------------------------------------------- pick the content
     want_news = NEWS_ENABLED and NEWS_SLOT > 0 and slot == NEWS_SLOT
-    news_item = None
+    news_items = []
     if want_news:
-        news_item = pick_news(state)
-        if news_item:
-            log(f"news reel: [{news_item['source']}] {news_item['title'][:100]}", kind="news")
+        news_items = pick_news(state)
+        if news_items:
+            log(f"news brief: {len(news_items)} stories — top: [{news_items[0]['source']}] {news_items[0]['title'][:90]}", kind="news")
         else:
             log("no fresh market news found — falling back to the evergreen bank", "WARN")
 
-    spec = build_news_spec(news_item, today, slot, rng) if news_item else build_bank_spec(content, state, today, slot, rng)
+    spec = build_news_spec(news_items, today, slot, rng) if news_items else build_bank_spec(content, state, today, slot, rng)
 
     # ------------------------------------------------- assign the influencer
     inf_data = load_influencers()
@@ -864,9 +934,10 @@ def run_once(content: dict, state: dict, args) -> int:
         print("influencer :", f"{persona['name']} · {persona['age']} · {persona['profession']} · {persona['city']} · {persona['handle']}")
         print("catchphrase:", persona["catchphrase"])
         print("actor desc :", spec["actor_desc"][:220], "…")
-        if news_item:
-            print("news source:", news_item["source"], "|", news_item["link"])
-            print("news title :", news_item["title"])
+        if news_items:
+            print("news stories:", len(news_items))
+            for n in news_items:
+                print("  •", n["source"], "|", n["title"][:90])
         print("brief      :")
         print(spec["brief"][:700])
         print("\ncaption top:", spec["caption_top"])
@@ -950,8 +1021,9 @@ def run_once(content: dict, state: dict, args) -> int:
         f"Follow {persona['handle']}"
     )
     caption_parts = [spec["caption_top"], script.get("caption") or "", persona_credit]
-    if news_item:
-        caption_parts.append(f"\U0001F4F0 Source: {news_item['source']} ({news_item['link']})")
+    if news_items:
+        bullets = "\n".join(f"\u2022 {it['title'][:130]} - {it['source']}" for it in news_items)
+        caption_parts.append("What can move Indian markets today:\n" + bullets)
     caption_parts.append(" ".join(spec["hashtags"]))
     caption_parts.append(DISCLAIMER_BILINGUAL)
     caption = "\n\n".join(p for p in caption_parts if p and p.strip())
@@ -979,16 +1051,18 @@ def run_once(content: dict, state: dict, args) -> int:
     # ------------------------------------------------- bookkeeping
     if spec["kind"] == "bank":
         state["counters"][spec["topic_id"]] = spec["counter"] + 1
-    if news_item:
-        state["news_used"].append({"hash": news_item["hash"], "date": today})
+    if news_items:
+        for it in news_items:
+            state["news_used"].append({"hash": it["hash"], "date": today})
         state["news_used"] = state["news_used"][-NEWS_USED_LIMIT:]
     state["history"].append({
         "date": today, "slot": slot, "reel_id": spec["reel_id"], "kind": spec["kind"],
         "topic_id": spec["topic_id"], "topic": spec["topic"],
         "subtopic": spec["subtopic"], "lang_order": spec["lang_order"],
         "persona_id": persona["id"], "persona_name": persona["name"],
-        "source": news_item["source"] if news_item else None,
-        "news_link": news_item["link"] if news_item else None,
+        "source": news_items[0]["source"] if news_items else None,
+        "news_link": news_items[0]["link"] if news_items else None,
+        "news_items": [{"source": it["source"], "title": it["title"][:120], "link": it["link"]} for it in news_items],
         "job_id": job_id, "video_url": result.get("video_url"),
         "platforms": PLATFORMS, "status": "posted",
         "verified": True,
@@ -1193,7 +1267,7 @@ def launch_once(state: dict) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="plan only, no API calls")
-    parser.add_argument("--slot", type=int, choices=[1, 2], help="slot override (1=morning, 2=evening)")
+    parser.add_argument("--slot", type=int, choices=range(1, 7), help="slot override (1-6; 1 = 08:30 IST world-news brief)")
     parser.add_argument("--date", help="override today's date as YYYY-MM-DD (testing)")
     parser.add_argument("--force", action="store_true", help="rerun even if the slot already posted")
     parser.add_argument("--launch", action="store_true", help="run the 10-reel launch batch (delivery per DELIVERY env)")
