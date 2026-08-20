@@ -282,6 +282,16 @@ acting against them
 > hooks, angles, subtopics, myths, stats, CTAs and hashtags in this document are
 > encoded 1:1 in `automation/content/topics.json`. See `automation/README.md`
 > for the secrets to add and how to switch it on.
+>
+> **Recent upgrades (v2):**
+> - 🛡️ **Gemini verification gate** — every script is fact-checked and
+>   compliance-audited (no advice, no invented numbers, good faith) before
+>   anything is generated; unsafe scripts are never posted.
+> - 📰 **News reels** — the morning slot builds reels from the latest headlines
+>   (sarkarikyp.com, Google News, Moneycontrol, ET, Livemint), strictly from
+>   source facts, with attribution.
+> - 🔁 **Bilingual reels** — each reel randomly starts in Hindi or English and
+>   flips mid-reel; subtitles always run in the opposite language of the speech.
 
 1. Pick a reel ID (e.g. `T2-S04-H07-A01`), assemble hook + subtopic + angle from the tables.
 2. Paste the master prompt (Section 3) into the **Android app → AI Shorts → description**.

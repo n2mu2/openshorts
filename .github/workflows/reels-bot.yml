@@ -54,6 +54,11 @@ jobs:
           PLATFORMS: ${{ vars.PLATFORMS }}
           POSTS_PER_DAY: ${{ vars.POSTS_PER_DAY }}
           MAX_MONTHLY_POSTS: ${{ vars.MAX_MONTHLY_POSTS }}
+          NEWS_ENABLED: ${{ vars.NEWS_ENABLED }}
+          NEWS_SLOT: ${{ vars.NEWS_SLOT }}
+          BILINGUAL: ${{ vars.BILINGUAL }}
+          BILINGUAL_VOICE_ID: ${{ vars.BILINGUAL_VOICE_ID }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           # --- manual dispatch inputs ---
           DRY_RUN: ${{ github.event.inputs.dry_run }}
           SLOT_OVERRIDE: ${{ github.event.inputs.slot }}

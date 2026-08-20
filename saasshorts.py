@@ -1187,9 +1187,11 @@ def composite_video(
         # ASS has styles embedded — use ass filter directly
         sub_filter = f"ass='{safe_sub}'"
     else:
-        # SRT fallback with TikTok-ish styling
+        # SRT fallback with TikTok-ish styling.
+        # DejaVu Sans covers Latin AND Devanagari, so bilingual (Hindi/English)
+        # script subtitles render correctly on the fork's self-hosted images.
         sub_style = (
-            "Alignment=2,Fontname=Arial Black,Fontsize=24,PrimaryColour=&H00FFFFFF,"
+            "Alignment=2,Fontname=DejaVu Sans,Fontsize=24,PrimaryColour=&H00FFFFFF,"
             "OutlineColour=&H00000000,BorderStyle=1,Outline=4,Shadow=0,MarginV=120,Bold=-1"
         )
         sub_filter = f"subtitles='{safe_sub}':force_style='{sub_style}'"
@@ -1449,9 +1451,22 @@ def generate_full_video(
     else:
         log("[4/6] No b-roll segments in script, skipping.")
 
-    # ── Step 5: Generate subtitles (from actual audio, not script text) ──
-    log("[5/6] Transcribing audio and generating TikTok-style subtitles...")
-    generate_tiktok_subs(audio_path, srt_path, max_words=2)
+    # ── Step 5: Generate subtitles ──
+    # Bilingual / cross-language mode (fork enhancement): when a script opts in
+    # with use_script_subtitles=true and carries subtitle_text on its segments,
+    # burn the script's own per-segment subtitle text (e.g. English subtitles
+    # under Hindi speech, Hindi subtitles under English speech) instead of
+    # transcribing the audio with Whisper.
+    segs = script.get("segments", [])
+    if script.get("use_script_subtitles") and any(seg.get("subtitle_text") for seg in segs):
+        log("[5/6] Bilingual mode: burning script subtitle_text (cross-language subtitles)...")
+        # SRT content needs the .srt extension so composite_video picks the
+        # subtitles filter (styled with DejaVu Sans — Devanagari + Latin).
+        srt_path = srt_path[:-4] + ".srt"
+        generate_srt_from_script(segs, srt_path)
+    else:
+        log("[5/6] Transcribing audio and generating TikTok-style subtitles...")
+        generate_tiktok_subs(audio_path, srt_path, max_words=2)
 
     # ── Step 6: Composite final video ──
     log("[6/6] Compositing final video with FFmpeg...")

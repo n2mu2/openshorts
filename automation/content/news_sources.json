@@ -1,0 +1,64 @@
+{
+  "comment": "News sources the bot samples for timely reels. Add/edit freely — any source that fails is skipped silently. type: rss = XML feed, html = headline scrape. lang: hi / en / mixed (helps script prompts).",
+  "keywords": [
+    "nifty", "sensex", "stock market", "share market", "share bazar", "bse", "nse",
+    "rbi", "sebi", "ipo", "budget", "बजट", "inflation", "महंगाई", "gdp", "अर्थव्यवस्था",
+    "gold", "सोना", "silver", "चांदी", "crude", "oil", "petrol", "diesel", "पेट्रोल", "डीजल",
+    "rupee", "dollar", "डॉलर", "trade", "gst", "income tax", "इनकम टैक्स", "tax", "टैक्स",
+    "mutual fund", "म्यूचुअल फंड", "sip", "bank", "बैंक", "interest rate", "ब्याज दर",
+    "fd rate", "loan", "लोन", "pension", "पेंशन", "yojana", "योजना", "subsidy", "सब्सिडी",
+    "kisan", "किसान", "lpg", "एलपीजी", "ppf", "epf", "provident fund", "भविष्य निधि",
+    "insurance", "बीमा", "investment", "निवेश", "profit", "मुनाफा", "markets", "market wrap",
+    "fii", "dii", "दलाल स्ट्रीट", "dalal street", "sbi", "लाभांश", "dividend"
+  ],
+  "sources": [
+    {
+      "name": "Google News — Indian Markets",
+      "url": "https://news.google.com/rss/search?q=%22stock%20market%22%20OR%20nifty%20OR%20sensex%20OR%20share%20market%20when%3A1d&hl=en-IN&gl=IN&ceid=IN:en",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Google News — Economy & Policy",
+      "url": "https://news.google.com/rss/search?q=rbi%20OR%20sebi%20OR%20budget%20OR%20inflation%20OR%20gst%20when%3A1d&hl=en-IN&gl=IN&ceid=IN:en",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Google News — Hindi Markets",
+      "url": "https://news.google.com/rss/search?q=%E0%A4%B8%E0%A5%8D%E0%A4%9F%E0%A5%89%E0%A4%95%20%E0%A4%AE%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%95%E0%A5%87%E0%A4%9F%20OR%20%E0%A4%B6%E0%A5%87%E0%A4%AF%E0%A4%B0%20%E0%A4%AC%E0%A4%BE%E0%A4%9C%E0%A4%BC%E0%A4%BE%E0%A4%B0%20when%3A1d&hl=hi-IN&gl=IN&ceid=IN:hi",
+      "type": "rss",
+      "lang": "hi"
+    },
+    {
+      "name": "Google News — Schemes & Subsidies",
+      "url": "https://news.google.com/rss/search?q=yojana%20OR%20subsidy%20OR%20pension%20OR%20%E0%A4%AF%E0%A5%8B%E0%A4%9C%E0%A4%A8%E0%A4%BE%20when%3A2d&hl=hi-IN&gl=IN&ceid=IN:hi",
+      "type": "rss",
+      "lang": "hi"
+    },
+    {
+      "name": "Sarkari KYP",
+      "url": "https://sarkarikyp.com/feed/",
+      "type": "rss",
+      "lang": "hi"
+    },
+    {
+      "name": "Moneycontrol Markets",
+      "url": "https://www.moneycontrol.com/rss/marketreports.xml",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Economic Times Markets",
+      "url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
+      "type": "rss",
+      "lang": "en"
+    },
+    {
+      "name": "Livemint Markets",
+      "url": "https://www.livemint.com/rss/markets",
+      "type": "rss",
+      "lang": "en"
+    }
+  ]
+}
