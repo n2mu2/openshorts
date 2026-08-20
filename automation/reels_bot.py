@@ -852,7 +852,7 @@ def pick_voice(bilingual: bool) -> str:
 
 
 # ------------------------------------------------------------------ slots
-SLOT_GRID_START_UTC = 3  # 03:00 UTC = 08:30 IST; six slots, every 4 hours
+SLOT_GRID_START_UTC = 2  # slot 1 window opens 02:00 UTC (08:00 IST); six slots, every 4 hours
 
 
 def resolve_slot(args, state: dict, today: str) -> int:

@@ -2,10 +2,15 @@ name: Reels Bot
 
 on:
   schedule:
-    # 03:00 UTC = 08:30 IST — morning slot (pre-market scroll)
-    - cron: "0 3 * * *"
-    # 13:30 UTC = 19:00 IST — evening slot (only used when POSTS_PER_DAY >= 2)
-    - cron: "30 13 * * *"
+    # 6 reels/day, 4-hour grid. UTC = IST - 5:30.
+    # Each cron fires ~15 min early: GitHub's typical scheduling delay (10-30 min)
+    # then lands the reel on the hour, IST.
+    - cron: "15 2 * * *"     # slot 1 · 08:00 IST — WORLD-NEWS morning brief (market-open)
+    - cron: "15 6 * * *"     # slot 2 · 12:00 IST — evergreen
+    - cron: "15 10 * * *"    # slot 3 · 16:00 IST — evergreen
+    - cron: "15 14 * * *"    # slot 4 · 20:00 IST — evergreen (post-market)
+    - cron: "15 18 * * *"    # slot 5 · 00:00 IST — evergreen
+    - cron: "15 22 * * *"    # slot 6 · 04:00 IST — evergreen
   workflow_dispatch:
     inputs:
       dry_run:
@@ -13,7 +18,7 @@ on:
         type: boolean
         default: false
       slot:
-        description: "Slot override (1 = morning, 2 = evening; blank = auto)"
+        description: "Slot override (1-6; 1 = 08:00 IST world-news brief; blank = auto)"
         required: false
         type: string
       force:
