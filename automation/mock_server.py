@@ -13,11 +13,14 @@ gate, generation, publish) without real services or costs. Stdlib only.
 """
 
 import json
+import os
 import sys
 import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 JOBS = {}  # job_id -> {"polls": int, "status": str}
+FAST = os.environ.get("MOCK_FAST") == "1"
+DUMMY_MP4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 4096
 
 BILINGUAL_SCRIPT = {
     "title": "NIFTY explained — bilingual demo",
@@ -83,13 +86,13 @@ RSS_XML = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 class Handler(BaseHTTPRequestHandler):
-    def _send(self, code, obj, raw=None):
+    def _send(self, code, obj, raw=None, ctype=None):
         if raw is not None:
-            body = raw.encode()
+            body = raw.encode() if isinstance(raw, str) else raw
         else:
             body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
-        self.send_header("Content-Type", "application/json" if raw is None else "application/rss+xml")
+        self.send_header("Content-Type", ctype or ("application/json" if raw is None else "application/rss+xml"))
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -106,13 +109,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"status": "ok"})
         if self.path.startswith("/news/rss.xml"):
             return self._send(200, {}, raw=RSS_XML)
+        if self.path.startswith("/videos/"):
+            return self._send(200, {}, raw=DUMMY_MP4, ctype="video/mp4")
         if self.path.startswith("/api/saasshorts/status/"):
             job_id = self.path.rsplit("/", 1)[-1]
             job = JOBS.get(job_id)
             if not job:
                 return self._send(404, {"detail": "job not found"})
             job["polls"] += 1
-            if job["polls"] >= 2:
+            if job["polls"] >= (1 if FAST else 2):
                 job["status"] = "completed"
             return self._send(200, {
                 "status": job["status"],

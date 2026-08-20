@@ -47,6 +47,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONTENT_FILE = os.path.join(BASE_DIR, "content", "topics.json")
 NEWS_FILE = os.path.join(BASE_DIR, "content", "news_sources.json")
 INFLUENCERS_FILE = os.path.join(BASE_DIR, "content", "influencers.json")
+LAUNCH_FILE = os.path.join(BASE_DIR, "content", "launch_batch.json")
+MEDIA_DIR = os.path.join(BASE_DIR, "media")
 STATE_FILE = os.path.join(BASE_DIR, "state", "state.json")
 LOG_FILE = os.path.join(BASE_DIR, "state", "log.jsonl")
 
@@ -85,6 +87,12 @@ NEWS_ENABLED = env("NEWS_ENABLED", "true").lower() not in ("0", "false", "no")
 NEWS_SLOT = max(0, min(2, int(env("NEWS_SLOT", "1") or 1)))             # which slot posts news; 0 = never
 NEWS_SOURCE_URLS = env("NEWS_SOURCE_URLS")                              # optional override, comma-separated
 VERIFY_MAX_ATTEMPTS = max(1, int(env("VERIFY_MAX_ATTEMPTS", "2") or 2))
+
+# Launch batch + delivery knobs
+LAUNCH = env("LAUNCH", "false").lower() in ("1", "true", "yes")         # run the 10-reel launch batch
+DELIVERY_MODE = env("DELIVERY", "instagram")                            # instagram | drive | instagram,drive
+DRIVE_FOLDER_ID = env("DRIVE_FOLDER_ID", "")                            # target shared folder
+DRIVE_DRY_RUN = env("DRIVE_DRY_RUN", "false").lower() in ("1", "true", "yes")
 
 LOG_LIMIT = 500
 HISTORY_LIMIT = 300
@@ -993,17 +1001,209 @@ def run_once(content: dict, state: dict, args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------ drive
+def absolutize(url: str) -> str:
+    if url.startswith(("http://", "https://")):
+        return url
+    return API_URL + (url if url.startswith("/") else "/" + url)
+
+
+def download_video(video_url: str, job_id: str = "") -> str:
+    """Download the finished reel MP4 from the OpenShorts server."""
+    os.makedirs(MEDIA_DIR, exist_ok=True)
+    abs_url = absolutize(video_url)
+    name = os.path.basename(video_url.split("?")[0]) or "reel.mp4"
+    dest = os.path.join(MEDIA_DIR, f"{job_id}_{name}" if job_id else name)
+    log(f"downloading reel: {abs_url[:120]}")
+    req = urllib.request.Request(abs_url, headers={"User-Agent": "openshorts-reels-bot/2.0"})
+    with urllib.request.urlopen(req, timeout=600) as resp:
+        with open(dest, "wb") as f:
+            while True:
+                chunk = resp.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+    size = os.path.getsize(dest)
+    if size == 0:
+        raise HttpError(0, f"downloaded empty file from {abs_url}")
+    log(f"downloaded {size / 1e6:.1f} MB -> {dest}")
+    return dest
+
+
+def deliver_to_drive(local_path: str, drive_name: str) -> dict:
+    """Upload the MP4 to the configured shared Drive folder."""
+    if DRIVE_DRY_RUN:
+        return {"file_id": f"sim-{abs(hash(drive_name))}", "name": drive_name,
+                "webViewLink": "(dry run - DRIVE_DRY_RUN=1)"}
+    if not DRIVE_FOLDER_ID:
+        raise HttpError(0, "DRIVE_FOLDER_ID is missing - set the shared folder id")
+    if not os.environ.get("DRIVE_SA_JSON"):
+        raise HttpError(0, "DRIVE_SA_JSON is missing - add the service account key secret")
+    cmd = [sys.executable, os.path.join(BASE_DIR, "drive_upload.py"), local_path, drive_name]
+    import subprocess
+    log(f"uploading to Drive folder {DRIVE_FOLDER_ID}: {drive_name}")
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, cwd=BASE_DIR)
+    if proc.returncode != 0:
+        raise HttpError(0, f"drive upload failed: {proc.stderr.strip()[:300]}")
+    try:
+        return json.loads(proc.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError) as e:
+        raise HttpError(0, f"drive upload returned unexpected output: {e}")
+
+
+def safe_drive_name(name: str) -> str:
+    return re.sub(r"[^\w\s\-.,()\[\]\u0900-\u097F]", "", name)[:120].strip() or "reel.mp4"
+
+
+# ------------------------------------------------------------------ launch
+def load_launch_batch() -> dict:
+    with open(LAUNCH_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def launch_once(state: dict) -> int:
+    """Generate the pre-drafted 10-reel batch (one per topic) and deliver it
+    per DELIVERY_MODE (default: Google Drive only - no Instagram posting).
+    Every pre-written script still passes through the Gemini verification gate."""
+    batch = load_launch_batch()
+    items = batch.get("items", [])
+    log(f"=== LAUNCH BATCH: {len(items)} pre-drafted reels | delivery={DELIVERY_MODE} ===")
+    inf_data = load_influencers()
+    influencers = inf_data["influencers"]
+    by_id = {p["id"]: p for p in influencers}
+    results = []
+    for idx, item in enumerate(items, 1):
+        persona = by_id.get(item["persona_id"])
+        if not persona:
+            raise HttpError(0, f"launch item {item['reel_id']}: unknown persona {item['persona_id']}")
+        spec = {
+            "kind": "launch", "reel_id": item["reel_id"], "topic_id": item["topic_id"],
+            "topic": f"Launch: {item['title']}", "subtopic": item["title"],
+            "lang_order": item["lang_order"], "ground_truth": item["ground_truth"],
+            "caption_top": item["caption_top"], "hashtags": item["hashtags"],
+            "persona": persona, "angle": "Launch batch",
+        }
+        log(f"[{idx}/{len(items)}] {item['reel_id']} — {item['title']} | {persona['name']} ({persona['age']}) | {item['lang_order']}")
+
+        script = item["script"]
+        issues = validate_script(script)
+        if issues:
+            log(f"launch script schema issues: {issues} - repairing timings", "WARN")
+            script = repair_script(script)
+            issues = validate_script(script)
+            if issues:
+                raise HttpError(0, f"{item['reel_id']} failed schema validation after repair: {issues}")
+        script["use_script_subtitles"] = True if BILINGUAL else False
+
+        # verification gate (mandatory even for pre-drafted scripts)
+        verdict, script = verify_script(script, spec)
+        if verdict != "approve":
+            log(f"launch reel {item['reel_id']} REJECTED by the gate - skipping. {spec['ground_truth'][:80]}", "ERROR")
+            state["history"].append({
+                "date": datetime.now(IST).strftime("%Y-%m-%d"), "slot": 0,
+                "reel_id": item["reel_id"], "kind": "launch", "status": "rejected",
+                "persona_id": persona["id"], "persona_name": persona["name"],
+                "ts": datetime.now(IST).isoformat(timespec="seconds"),
+            })
+            continue
+
+        # generate
+        voice_id = persona.get("voice_id") or pick_voice(BILINGUAL)
+        generate_body = {
+            "script": script,
+            "voice_id": voice_id,
+            "actor_description": script.get("actor_description") or None,
+            "selected_actor_url": persona.get("avatar_url") or None,
+            "video_mode": VIDEO_MODE,
+            "share_to_gallery": False,
+        }
+        gen_headers = {}
+        if FAL_KEY:
+            gen_headers["X-Fal-Key"] = FAL_KEY
+        if ELEVENLABS_KEY:
+            gen_headers["X-ElevenLabs-Key"] = ELEVENLABS_KEY
+        _, generated = http("POST", "/api/saasshorts/generate", generate_body, headers=gen_headers, timeout=600)
+        job_id = generated.get("job_id")
+        if not job_id:
+            raise HttpError(0, f"generate returned no job_id for {item['reel_id']}")
+        log(f"  generate job {job_id} (voice={voice_id})", job_id=job_id)
+
+        deadline = time.time() + MAX_WAIT_MINUTES * 60
+        result = None
+        while time.time() < deadline:
+            _, status = http("GET", f"/api/saasshorts/status/{job_id}")
+            st = status.get("status")
+            result = status.get("result") or {}
+            if st == "completed":
+                break
+            if st == "failed":
+                raise HttpError(0, f"{item['reel_id']} generation failed: {str((status.get('logs') or [])[-3:])[:200]}")
+            time.sleep(30)
+        else:
+            raise HttpError(0, f"timeout waiting for {item['reel_id']} ({job_id})")
+        log(f"  render completed: {str(result.get('video_url'))[:90]}")
+
+        entry = {
+            "date": datetime.now(IST).strftime("%Y-%m-%d"), "slot": 0,
+            "reel_id": item["reel_id"], "kind": "launch", "topic_id": item["topic_id"],
+            "topic": item["title"], "lang_order": item["lang_order"],
+            "persona_id": persona["id"], "persona_name": persona["name"],
+            "job_id": job_id, "video_url": result.get("video_url"),
+            "verified": True,
+        }
+
+        # delivery
+        if "drive" in DELIVERY_MODE.split(","):
+            local = download_video(result.get("video_url") or "", job_id=job_id)
+            drive_name = safe_drive_name(f"{item['reel_id']} - {item['title']} - {persona['name']}.mp4")
+            info = deliver_to_drive(local, drive_name)
+            entry["drive_file_id"] = info.get("file_id")
+            entry["drive_link"] = info.get("webViewLink")
+            entry["status"] = "delivered"
+            log(f"  -> Drive: {info.get('file_id')} ({info.get('webViewLink')})")
+        if "instagram" in DELIVERY_MODE.split(","):
+            caption_parts = [item["caption_top"], (script.get("caption") or ""),
+                             f"With {persona['name']}, {persona['age']} - {persona['profession']}, {persona['city']}.",
+                             " ".join(item["hashtags"]), DISCLAIMER_BILINGUAL]
+            caption = "\n\n".join(p for p in caption_parts if p and p.strip())
+            post_body = {"job_id": job_id, "platforms": PLATFORMS,
+                         "title": item["title"][:80], "description": caption, "timezone": "Asia/Kolkata"}
+            if UP_KEY:
+                post_body["api_key"] = UP_KEY
+            if UP_USER:
+                post_body["user_id"] = UP_USER
+            _, posted = http("POST", "/api/saasshorts/post", post_body, timeout=300)
+            entry["status"] = "posted"
+            log(f"  -> Instagram: {str(posted)[:120]}")
+        if "status" not in entry:
+            entry["status"] = "generated"
+
+        entry["ts"] = datetime.now(IST).isoformat(timespec="seconds")
+        state["history"].append(entry)
+        results.append(entry)
+
+    state["launch_done"] = datetime.now(IST).isoformat(timespec="seconds")
+    state["history"] = state["history"][-HISTORY_LIMIT:]
+    save_state(state)
+    ok = sum(1 for e in results if e.get("status") in ("delivered", "posted"))
+    log(f"=== LAUNCH BATCH done: {ok}/{len(items)} delivered, {len(items) - ok} skipped/rejected ===")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="plan only, no API calls")
     parser.add_argument("--slot", type=int, choices=[1, 2], help="slot override (1=morning, 2=evening)")
     parser.add_argument("--date", help="override today's date as YYYY-MM-DD (testing)")
     parser.add_argument("--force", action="store_true", help="rerun even if the slot already posted")
+    parser.add_argument("--launch", action="store_true", help="run the 10-reel launch batch (delivery per DELIVERY env)")
     args = parser.parse_args()
 
     content = load_content()
     state = load_state()
     try:
+        if args.launch or LAUNCH:
+            return launch_once(state)
         return run_once(content, state, args)
     except HttpError as e:
         log(f"HTTP error: {e}", "ERROR")
