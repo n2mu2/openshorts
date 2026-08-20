@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon foreground: a brass play triangle over a rising candlestick line. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M30,66 L40,58 L50,63 L60,52 L70,57 L76,50"
+        android:strokeColor="#D4A24A"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M48,42 L74,56 L48,70 Z"
+        android:fillColor="#D4A24A" />
+</vector>
