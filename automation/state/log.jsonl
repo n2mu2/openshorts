@@ -37,3 +37,9 @@
 {"ts": "2026-08-22T00:24:04+05:30", "level": "INFO", "msg": "language flip: hi-en"}
 {"ts": "2026-08-22T00:24:04+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-22T00:24:04+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-22 slot=6 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "planned reel T8-S08-H04-A2 — IPOs and Primary Markets / red flags in a DRHP / Mistake spotlight", "reel_id": "T8-S08-H04-A2", "kind": "bank", "lang_order": "hi-en", "slot": 6, "date": "2026-08-22"}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "influencer: Kamini Sethi (40, female, Delhi) — corporate lawyer who reads every DRHP [INF-T8-W40]", "persona_id": "INF-T8-W40"}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "language flip: hi-en"}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-22T04:12:08+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
