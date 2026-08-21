@@ -88,6 +88,11 @@ NEWS_SLOT = max(0, min(2, int(env("NEWS_SLOT", "1") or 1)))             # which 
 NEWS_SOURCE_URLS = env("NEWS_SOURCE_URLS")                              # optional override, comma-separated
 VERIFY_MAX_ATTEMPTS = max(1, int(env("VERIFY_MAX_ATTEMPTS", "2") or 2))
 
+# Reel length: min 60s, max 120s (user-specified format).
+REEL_DURATION_MIN = max(60, int(env("REEL_DURATION_MIN", "60") or 60))
+REEL_DURATION_MAX = min(120, max(REEL_DURATION_MIN, int(env("REEL_DURATION_MAX", "120") or 120)))
+REEL_DURATION_TARGET = max(REEL_DURATION_MIN, min(REEL_DURATION_MAX, int(env("REEL_DURATION_TARGET", "75") or 75)))
+
 # Launch batch + delivery knobs
 LAUNCH = env("LAUNCH", "false").lower() in ("1", "true", "yes")         # run the 10-reel launch batch
 DELIVERY_MODE = env("DELIVERY", "instagram")                            # instagram | drive | instagram,drive
@@ -358,13 +363,18 @@ def build_bank_spec(content: dict, state: dict, date_str: str, slot: int, rng: r
     }
     cta = topic["cta"][counter % len(topic["cta"])]
     actor = content["actors"][(seed := int(date_str.replace("-", "")) * 10 + slot) % len(content["actors"])]
-    duration = topic.get("duration", content["defaults"]["duration_seconds"])
+    duration = pick_reel_duration(rng)
+
+    def duration_label(d: int) -> str:
+        if d < 90:
+            return "about a minute"
+        return "under two minutes"
 
     def fill(s: str) -> str:
         subtopic_spoken = subtopic.replace(":", ",")
         return (s.replace("{subtopic}", subtopic_spoken)
                  .replace("{Subtopic}", subtopic_spoken[:1].upper() + subtopic_spoken[1:])
-                 .replace("{duration}", str(duration))
+                 .replace("{duration}", duration_label(duration))
                  .replace("{myth}", material["myth"])
                  .replace("{mistake}", material["mistake"])
                  .replace("{stat}", material["stat"])
@@ -417,7 +427,7 @@ def build_bank_spec(content: dict, state: dict, date_str: str, slot: int, rng: r
         "actor": actor,
         "counter": counter,
         "lang_order": lang_order,
-        "duration": 20,
+        "duration": duration,
     }
 
 
@@ -554,7 +564,8 @@ def build_news_spec(items: list, date_str: str, slot: int, rng: random.Random) -
         "STRICT RULES:\n"
         "1. Use ONLY facts stated in the NEWS ITEMS above. Never invent numbers, events or figures.\n"
         "2. FORMAT = UNIQUE BULLET POINTS: the narration of the solution and demo segments must carry "
-        "3-4 bullets in total, each bullet covering ONE distinct news item above (no item used twice).\n"
+        "5-6 bullets in total, each bullet covering ONE distinct news item above (no item used twice), "
+        "with a one-line plain-language explanation after each bullet.\n"
         "3. Every bullet MUST end with the related Indian market sector in exactly this format: "
         "\" -> Sector: <sector>\". Choose sectors ONLY from this list: " + sectors + ".\n"
         "4. NEVER name specific stocks, companies or brands. Sectors only.\n"
@@ -580,7 +591,7 @@ def build_news_spec(items: list, date_str: str, slot: int, rng: random.Random) -
         "actor": {},
         "counter": 0,
         "lang_order": lang_order,
-        "duration": 20,
+        "duration": rng.randint(60, min(90, REEL_DURATION_MAX)),
         "bullet_style": True,
         "news": {
             "items": [
@@ -601,7 +612,17 @@ SCRIPT_SYSTEM = (
 )
 
 SEGMENT_TYPES = ["hook", "problem", "solution", "demo", "cta"]
-REPAIR_TIMINGS = {"hook": (0, 4), "problem": (4, 8), "solution": (8, 15), "demo": (15, 19), "cta": (19, 21)}
+# canonical segment ratios for a long reel (60-120s): hook 8% / problem 16% /
+# solution 44% / demo 20% / cta 12% of duration_seconds
+SEGMENT_RATIOS = [("hook", 0.0, 0.08), ("problem", 0.08, 0.24),
+                  ("solution", 0.24, 0.68), ("demo", 0.68, 0.88), ("cta", 0.88, 1.0)]
+
+
+def pick_reel_duration(rng: random.Random) -> int:
+    """Long-format reels: 60-120s, target-centred (most land 65-90s)."""
+    lo = max(REEL_DURATION_MIN, REEL_DURATION_TARGET - 15)
+    hi = min(REEL_DURATION_MAX, REEL_DURATION_TARGET + 15)
+    return rng.randint(lo, hi)
 
 
 def validate_script(script: dict) -> list:
@@ -625,21 +646,29 @@ def validate_script(script: dict) -> list:
         if s.get("visual") == "broll" and not (s.get("broll_prompt") or "").strip():
             issues.append(f"segment {i} broll_prompt empty")
     total = float(script.get("duration_seconds", 0))
-    if not (15 <= total <= 25):
-        issues.append(f"duration_seconds {total} outside 15-25")
+    if not (REEL_DURATION_MIN - 5 <= total <= REEL_DURATION_MAX + 5):
+        issues.append(f"duration_seconds {total} outside {REEL_DURATION_MIN}-{REEL_DURATION_MAX}")
+    words = sum(len((s.get("narration") or "").split()) for s in segs)
+    if words < 130:
+        issues.append(f"narration too short for a long reel ({words} words; need ~150+)")
     return issues
 
 
 def repair_script(script: dict) -> dict:
-    """Normalize timings to the canonical 21-second layout so the server's
-    composite step always gets monotonic, in-range segments."""
+    """Normalize timings to the canonical long-reel layout (proportional to the
+    script's own duration_seconds) so the server's composite step always gets
+    monotonic, in-range segments."""
     segs = script.get("segments", [])
     if len(segs) != 5:
         return script
+    dur = float(script.get("duration_seconds") or REEL_DURATION_TARGET)
     for s in segs:
-        if s.get("type") in REPAIR_TIMINGS:
-            s["start"], s["end"] = REPAIR_TIMINGS[s["type"]]
-    script["duration_seconds"] = 21
+        for name, lo, hi in SEGMENT_RATIOS:
+            if s.get("type") == name:
+                s["start"] = round(dur * lo, 1)
+                s["end"] = round(dur * hi, 1)
+                break
+    script["duration_seconds"] = dur
     return script
 
 
@@ -697,17 +726,29 @@ def build_script(spec: dict) -> dict:
         )
 
     engagement_rules = (
-        "ENGAGEMENT RULES (mandatory):\n"
+        "ENGAGEMENT RULES (long-format, mandatory):\n"
         "1. The problem segment MUST end with a direct question to the viewer, in that "
         "segment's language (e.g. 'Aapke saath aisa hua hai?' / 'Has this happened to you?').\n"
-        "2. The solution segment MUST open with a very short micro-story or a real-life "
-        "example (max 2 lines, first person - e.g. 'Meri ek dost ke saath...' / 'A friend "
-        "of mine...'). Use the story/example material from the brief when given; otherwise "
-        "invent a realistic everyday situation that fits the topic.\n"
+        "2. The solution segment MUST open with a short micro-story or a real-life "
+        "example (first person - e.g. 'Meri ek dost ke saath...' / 'A friend of mine...'), "
+        "and MUST include a SECOND everyday example or analogy later in the same segment "
+        "to keep the long stretch engaging. Use the story/example material from the brief "
+        "when given; otherwise invent realistic everyday situations that fit the topic.\n"
         "3. The CTA segment MUST end with a question that invites comments (e.g. "
         "'Comment YES if this helped you' / 'Aap kya karte? Comment karo').\n"
         "4. Keep the whole reel conversational - like one person talking to a friend, "
         "not reading a textbook.\n"
+    )
+    delivery_rules = (
+        "HUMAN DELIVERY RULES (mandatory - the voice must NOT sound like AI):\n"
+        "1. Vary sentence length: mix very short punchy lines with longer explanations.\n"
+        "2. Use a natural pause '...' right before the most important point at least twice "
+        "in the reel (pause = silence, and silence is powerful).\n"
+        "3. Change pace inside the narration: quick for excitement, slower for the key idea.\n"
+        "4. Include one rhetorical question inside the solution segment.\n"
+        "5. Use natural contractions and light Hinglish code-switching. No textbook Hindi, "
+        "no monotone lists, no upspeak at every line end.\n"
+        "6. Write emphasis in CAPS sparingly (max 3 per segment) so the voice stresses it.\n"
     )
     if spec.get("bullet_style"):
         engagement_rules = (
@@ -715,13 +756,36 @@ def build_script(spec: dict) -> dict:
             "1. The problem segment must end with a direct question to the viewer "
             "(e.g. 'Ready for the market open?' / 'Market khulne se pehle ready?').\n"
             "2. The solution and demo segments ARE the bullet list: first half of the "
-            "bullets in solution, second half in demo. Each bullet = one short sentence "
-            "ending exactly with ' -> Sector: <sector>' (use the sector list from the brief).\n"
+            "bullets in solution, second half in demo. Each bullet = one or two short "
+            "sentences ending exactly with ' -> Sector: <sector>' (use the sector list "
+            "from the brief). Include a one-line plain-language explanation after each bullet.\n"
             "3. The CTA segment must end with a comment-inviting question "
             "(e.g. 'Which sector surprised you today? Comment it').\n"
             "4. Conversational briefing tone - like a friend catching you up before "
             "the market opens. No micro-story needed in this format.\n"
         )
+        delivery_rules = (
+            "HUMAN DELIVERY RULES (mandatory - the voice must NOT sound like AI):\n"
+            "1. Read the bullets conversationally, not like a list - vary pace between bullets.\n"
+            "2. Pause '...' before the sector name of the first bullet (silence builds attention).\n"
+            "3. One bullet in a slightly quicker tempo, one slower for emphasis.\n"
+            "4. Natural light Hinglish, no monotone, emphasis in CAPS sparingly (max 3 per segment).\n"
+        )
+
+    duration = int(spec.get("duration") or REEL_DURATION_TARGET)
+
+    def seg_times(lo: float, hi: float) -> str:
+        return f"{int(duration * lo)}-{int(duration * hi)}"
+
+    timing_guide = (
+        f"Segment timings (seconds) - start/end must match these windows exactly and be "
+        f"monotonic, total duration {duration}s: "
+        f"hook {seg_times(0, 0.08)}, problem {seg_times(0.08, 0.24)}, "
+        f"solution {seg_times(0.24, 0.68)}, demo {seg_times(0.68, 0.88)}, "
+        f"cta {seg_times(0.88, 1.0)}. "
+        f"Total narration across all segments: about {int(duration * 2.6)} words "
+        f"(range {int(duration * 2.2)}-{int(duration * 3.0)})."
+    )
 
     actor_desc = spec.get("actor_desc", "Indian professional in their late 20s, friendly and trustworthy, casual modern clothing")
 
@@ -732,19 +796,22 @@ def build_script(spec: dict) -> dict:
 {persona_block}
 {split_rule}
 {engagement_rules}
+{delivery_rules}
+LONG-FORMAT: this is a {duration}-second reel (60-120s allowed).
+{timing_guide}
 Return ONLY JSON, exactly this schema:
 {{
   "title": "short internal title",
   "style": "{'educational'}",
-  "duration_seconds": 21,
+  "duration_seconds": {duration},
   "target_platform": "instagram",
   "hook_text": "2-5 word on-screen hook (in {lang1_name})",
   "segments": [
-    {{"type": "hook", "start": 0, "end": 4, "narration": "...({lang1_name}, punchy hook)", "visual": "actor_talking", "broll_prompt": null, "emotion": "excited", "subtitle_text": "...({lang2_name})"}},
-    {{"type": "problem", "start": 4, "end": 8, "narration": "...({lang1_name}, ends with a QUESTION to the viewer)", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "concerned", "subtitle_text": "...({lang2_name})"}},
-    {{"type": "solution", "start": 8, "end": 15, "narration": "...({lang2_name}, opens with a micro-story or example)", "visual": "actor_talking", "broll_prompt": null, "emotion": "confident", "subtitle_text": "...({lang1_name})"}},
-    {{"type": "demo", "start": 15, "end": 19, "narration": "...({lang2_name})", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "excited", "subtitle_text": "...({lang1_name})"}},
-    {{"type": "cta", "start": 19, "end": 21, "narration": "...({lang2_name}, CTA to follow/save/share + a comment-inviting question)", "visual": "actor_talking", "broll_prompt": null, "emotion": "friendly", "subtitle_text": "...({lang1_name})"}}
+    {{"type": "hook", "start": {int(duration * 0)}, "end": {int(duration * 0.08)}, "narration": "...({lang1_name}, punchy hook)", "visual": "actor_talking", "broll_prompt": null, "emotion": "excited", "subtitle_text": "...({lang2_name})"}},
+    {{"type": "problem", "start": {int(duration * 0.08)}, "end": {int(duration * 0.24)}, "narration": "...({lang1_name}, ends with a QUESTION to the viewer)", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "concerned", "subtitle_text": "...({lang2_name})"}},
+    {{"type": "solution", "start": {int(duration * 0.24)}, "end": {int(duration * 0.68)}, "narration": "...({lang2_name}, opens with a micro-story/example AND contains a second example mid-way)", "visual": "actor_talking", "broll_prompt": null, "emotion": "confident", "subtitle_text": "...({lang1_name})"}},
+    {{"type": "demo", "start": {int(duration * 0.68)}, "end": {int(duration * 0.88)}, "narration": "...({lang2_name})", "visual": "broll", "broll_prompt": "detailed English visual description (Indian setting)", "emotion": "excited", "subtitle_text": "...({lang1_name})"}},
+    {{"type": "cta", "start": {int(duration * 0.88)}, "end": {duration}, "narration": "...({lang2_name}, CTA to follow/save/share + a comment-inviting question)", "visual": "actor_talking", "broll_prompt": null, "emotion": "friendly", "subtitle_text": "...({lang1_name})"}}
   ],
   "full_narration": "all narration joined with spaces",
   "actor_description": "{actor_desc}",
@@ -753,9 +820,8 @@ Return ONLY JSON, exactly this schema:
 }}
 
 RULES: exact schema · no markdown · durations must match start/end · broll_prompt in English ·
-no stock names · no buy/sell/target prices · no profit guarantees · educational tone ·
-narration totals ~55-70 words. If Hindi is used, it must be correct, natural Hindi
-(Devanagari), not transliterated English."""
+no stock names · no buy/sell/target prices · no profit guarantees · educational tone.
+If Hindi is used, it must be correct, natural Hindi (Devanagari), not transliterated English."""
     return gemini_json(prompt, SCRIPT_SYSTEM, temperature=0.8)
 
 

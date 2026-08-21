@@ -1,11 +1,11 @@
 {
   "defaults": {
-    "duration_seconds": 40,
+    "duration_seconds": 75,
     "style": "educational",
     "language": "en"
   },
   "hooks": [
-    "Nobody explains {subtopic} properly. So I will — in {duration} seconds.",
+    "Nobody explains {subtopic} properly. So I will — in {duration}.",
     "If you're new to the market, this {subtopic} video can save you years.",
     "I wish someone told me this about {subtopic} 5 years ago.",
     "90% of people get {subtopic} wrong. Here's the 10% version.",

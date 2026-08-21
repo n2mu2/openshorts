@@ -255,6 +255,9 @@ investor · S10 Insurance before investing.
   stories as unique bullet points, each mapped to an Indian **sector**
   (never stocks) — see `automation/README.md` §4.
 - **Slots 2–6 = evergreen mix** across the 10-topic bank.
+- **Format: every reel is 60–120 seconds** (long-format, default target 75s),
+  lip-synced talking avatars with per-segment TTS, `...` pauses and CAPS
+  emphasis for a human voice — see `automation/README.md` §3b–3c.
 - Note: 04:30 IST is a low-engagement posting hour; the 4-hour grid was chosen
   for cadence discipline. If engagement data says otherwise later, reshuffle
   the grid.

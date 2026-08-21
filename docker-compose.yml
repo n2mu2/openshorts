@@ -9,6 +9,16 @@ services:
       - /app/__pycache__
       - ./output:/app/output
     restart: unless-stopped
+    environment:
+      # Human-voice TTS tuning (ElevenLabs). Grounded in the
+      # 'How I Actually Make AI Voice Sound Real' playbook:
+      # lower stability = more human variation, similarity keeps the voice's
+      # identity, style adds natural emotion. See automation/README.md §3.
+      - TTS_STABILITY=${TTS_STABILITY:-0.38}
+      - TTS_SIMILARITY=${TTS_SIMILARITY:-0.80}
+      - TTS_STYLE=${TTS_STYLE:-0.42}
+      - TTS_MODEL=${TTS_MODEL:-eleven_multilingual_v2}
+      - TTS_SPEAKER_BOOST=${TTS_SPEAKER_BOOST:-true}
 
   frontend:
     build:

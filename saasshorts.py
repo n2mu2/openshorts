@@ -776,13 +776,35 @@ def generate_actor_image(
     return output_path
 
 
+def _tts_settings() -> dict:
+    """ElevenLabs voice settings tuned for HUMAN-sounding speech.
+
+    Grounded in the 'How I Actually Make AI Voice Sound Real' playbook:
+      - stability ~35-45% (lower = more human variation, higher = robotic)
+      - similarity 75-85% (keep the voice's identity)
+      - style exaggeration 30-50% (natural emotion)
+    All overridable via env: TTS_STABILITY, TTS_SIMILARITY, TTS_STYLE,
+    TTS_MODEL, TTS_SPEAKER_BOOST.
+    """
+    return {
+        "stability": float(os.environ.get("TTS_STABILITY", "0.38")),
+        "similarity_boost": float(os.environ.get("TTS_SIMILARITY", "0.80")),
+        "style": float(os.environ.get("TTS_STYLE", "0.42")),
+        "use_speaker_boost": os.environ.get("TTS_SPEAKER_BOOST", "true").lower() in ("1", "true", "yes"),
+    }
+
+
+def _tts_model() -> str:
+    return os.environ.get("TTS_MODEL", "eleven_multilingual_v2")
+
+
 def generate_voiceover(
     text: str,
     elevenlabs_key: str,
     output_path: str,
     voice_id: str = "21m00Tcm4TlvDq8ikWAM",
 ) -> str:
-    """Generate voiceover audio using ElevenLabs TTS."""
+    """Generate voiceover audio using ElevenLabs TTS (human-tuned settings)."""
     print(f"[SaaSShorts] 🎙️ Generating voiceover ({len(text)} chars)...")
 
     url = f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}"
@@ -794,16 +816,11 @@ def generate_voiceover(
 
     body = {
         "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75,
-            "style": 0.4,
-            "use_speaker_boost": True,
-        },
+        "model_id": _tts_model(),
+        "voice_settings": _tts_settings(),
     }
 
-    with httpx.Client(timeout=120.0) as client:
+    with httpx.Client(timeout=180.0) as client:
         resp = client.post(url, headers=headers, json=body)
         if resp.status_code != 200:
             raise Exception(f"ElevenLabs TTS error ({resp.status_code}): {resp.text}")
@@ -813,6 +830,55 @@ def generate_voiceover(
 
     print(f"[SaaSShorts] ✅ Voiceover: {output_path}")
     return output_path
+
+
+def generate_voiceover_segments(
+    segments: list,
+    elevenlabs_key: str,
+    output_dir: str,
+    voice_id: str = "21m00Tcm4TlvDq8ikWAM",
+) -> str:
+    """Per-segment TTS for long reels (60-120s).
+
+    Synthesizing each script segment separately (instead of one long narration)
+    makes the delivery follow the segment's own pacing cues (questions, pauses,
+    story beats), which reads far more human than one long monotone take. The
+    segment audio files are then concatenated in order into one voiceover.
+
+    Falls back to a single full-narration call on any failure.
+    """
+    seg_audios = []
+    for i, seg in enumerate(segments):
+        narration = (seg.get("narration") or "").strip()
+        if not narration:
+            continue
+        out = os.path.join(output_dir, f"voice_seg_{i}.mp3")
+        try:
+            generate_voiceover(narration, elevenlabs_key, out, voice_id)
+            seg_audios.append(out)
+        except Exception as e:
+            print(f"[SaaSShorts] ⚠️ segment {i} TTS failed ({e}); falling back to single pass.")
+            return None
+    if len(seg_audios) < 2:
+        return None
+    # concat in order
+    joined = os.path.join(output_dir, "voice_segments_joined.mp3")
+    list_file = os.path.join(output_dir, "voice_segments.txt")
+    with open(list_file, "w") as f:
+        for p in seg_audios:
+            f.write(f"file '{p.replace(chr(39), chr(39) + chr(92) + chr(39) + chr(39))}'\n")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+             "-i", list_file, "-c", "copy", joined],
+            check=True, capture_output=True, timeout=300,
+        )
+        if os.path.exists(joined) and os.path.getsize(joined) > 0:
+            print(f"[SaaSShorts] ✅ Per-segment voiceover joined: {joined}")
+            return joined
+    except Exception as e:
+        print(f"[SaaSShorts] ⚠️ voice segment concat failed ({e}); falling back.")
+    return None
 
 
 def get_elevenlabs_voices(elevenlabs_key: str) -> list:
@@ -889,11 +955,25 @@ def generate_talking_head_lowcost(
     audio_path: str,
     fal_key: str,
     output_path: str,
+    voice_segments=None,
 ) -> str:
+    """Low-cost talking head: Hailuo 2.3 Fast img2video → VEED Lipsync.
+
+    Long reels (60-120s): when per-segment audio files are available, each
+    segment gets its own VEED lipsync pass on one of two alternating Hailuo
+    motion clips, then the segment clips are concatenated — so the avatar's
+    movement changes every ~10-40s like a real person shifting while talking,
+    instead of one 6s loop for the whole reel. Any failure falls back to the
+    legacy single-pass lipsync.
     """
-    Low-cost talking head: Hailuo 2.3 Fast img2video → VEED Lipsync.
-    ~$0.39 vs ~$1.69 for Kling Avatar v2.
-    """
+    if voice_segments and len(voice_segments) >= 3:
+        try:
+            return _talking_head_chunked(
+                image_path, voice_segments, fal_key, output_path
+            )
+        except Exception as e:
+            print(f"[SaaSShorts] ⚠️ chunked lipsync failed ({e}); falling back to single pass.")
+
     print(f"[SaaSShorts] 🗣️ Generating talking head (Low Cost: Hailuo + VEED Lipsync)...")
 
     # Step 1: Generate 6s video from image using MiniMax Hailuo 2.3 Fast ($0.19)
@@ -964,6 +1044,111 @@ def generate_talking_head_lowcost(
             f.write(vid_resp.content)
 
     print(f"[SaaSShorts] ✅ Talking head (low cost): {output_path}")
+    return output_path
+
+
+_HAILUO_PROMPTS = [
+    "Person talking to camera, subtle head nods and natural micro-expressions. "
+    "Gentle head movement, slight shoulder sway. Eye contact with camera. "
+    "Natural blinking. Soft ambient lighting. Smooth cinematic motion.",
+    "Person talking to camera, occasionally leaning slightly forward to emphasise a point, "
+    "small natural hand gestures near the chest, relaxed shoulders, warm expression, "
+    "natural blinking and micro-expressions, soft ambient lighting.",
+]
+
+
+def _hailuo_clip(image_path: str, fal_key: str, cache_path: str, prompt: str) -> str:
+    """One cached Hailuo motion clip. Returns the fal CDN URL."""
+    if os.path.exists(cache_path) and os.path.getsize(cache_path) > 0:
+        print(f"[SaaSShorts]   Hailuo clip cached ({os.path.basename(cache_path)}), skipping.")
+        return _fal_upload_file(cache_path, fal_key)
+    image_url = _fal_upload_file(image_path, fal_key)
+    result = _fal_run(
+        "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video",
+        {"image_url": image_url, "prompt": prompt},
+        fal_key,
+        timeout=300,
+    )
+    if "video" in result:
+        url = result["video"]["url"] if isinstance(result["video"], dict) else result["video"]
+    elif "video_url" in result:
+        url = result["video_url"]
+    elif "output" in result:
+        url = result["output"]["url"] if isinstance(result["output"], dict) else result["output"]
+    else:
+        raise Exception(f"No video in Hailuo result: {result}")
+    with httpx.Client(timeout=180.0) as client:
+        resp = client.get(url)
+        with open(cache_path, "wb") as f:
+            f.write(resp.content)
+    print(f"[SaaSShorts]   Hailuo clip ready ({os.path.basename(cache_path)}).")
+    return _fal_upload_file(cache_path, fal_key)
+
+
+def _talking_head_chunked(image_path: str, voice_segments: list, fal_key: str, output_path: str) -> str:
+    """Per-segment lipsync: each script segment gets its own VEED pass on one of
+    two alternating Hailuo motion clips, then all clips are concatenated."""
+    print(f"[SaaSShorts] 🗣️ Generating talking head (chunked lipsync, {len(voice_segments)} segments)...")
+
+    base_dir = os.path.dirname(output_path)
+    # Two alternating motion clips so the body language changes over the reel
+    base_urls = [
+        _hailuo_clip(image_path, fal_key, os.path.join(base_dir, "hailuo_motion_a.mp4"), _HAILUO_PROMPTS[0]),
+        _hailuo_clip(image_path, fal_key, os.path.join(base_dir, "hailuo_motion_b.mp4"), _HAILUO_PROMPTS[1]),
+    ]
+
+    chunk_paths = []
+    for i, seg_audio in enumerate(voice_segments):
+        if not os.path.exists(seg_audio) or os.path.getsize(seg_audio) == 0:
+            raise Exception(f"missing segment audio {seg_audio}")
+        chunk_out = os.path.join(base_dir, f"head_chunk_{i}.mp4")
+        if os.path.exists(chunk_out) and os.path.getsize(chunk_out) > 0:
+            chunk_paths.append(chunk_out)
+            continue
+        audio_url = _fal_upload_file(seg_audio, fal_key)
+        lipsync_result = _fal_run(
+            "veed/lipsync",
+            {"video_url": base_urls[i % 2], "audio_url": audio_url},
+            fal_key,
+            timeout=900,
+        )
+        if "video" in lipsync_result:
+            url = lipsync_result["video"]["url"] if isinstance(lipsync_result["video"], dict) else lipsync_result["video"]
+        else:
+            raise Exception(f"No video in VEED Lipsync chunk {i}: {lipsync_result}")
+        with httpx.Client(timeout=180.0) as client:
+            resp = client.get(url)
+            with open(chunk_out, "wb") as f:
+                f.write(resp.content)
+        print(f"[SaaSShorts]   chunk {i} lipsynced ({os.path.getsize(chunk_out) // 1024} KB).")
+        chunk_paths.append(chunk_out)
+
+    # normalize every chunk to 1080x1920@30 so concat is seamless
+    norm_paths = []
+    for i, p in enumerate(chunk_paths):
+        norm = os.path.join(base_dir, f"head_chunk_{i}_norm.mp4")
+        if os.path.exists(norm) and os.path.getsize(norm) > 0:
+            norm_paths.append(norm)
+            continue
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", p,
+             "-vf", "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,fps=30",
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+             "-c:a", "aac", "-b:a", "128k", norm],
+            check=True, capture_output=True, timeout=600,
+        )
+        norm_paths.append(norm)
+
+    list_file = os.path.join(base_dir, "head_chunks.txt")
+    with open(list_file, "w") as f:
+        for p in norm_paths:
+            f.write(f"file '{p.replace(chr(39), chr(39) + chr(92) + chr(39) + chr(39))}'\n")
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+         "-i", list_file, "-c", "copy", output_path],
+        check=True, capture_output=True, timeout=600,
+    )
+    print(f"[SaaSShorts] ✅ Talking head (chunked, {len(chunk_paths)} clips): {output_path}")
     return output_path
 
 
@@ -1375,9 +1560,32 @@ def generate_full_video(
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             future_img = executor.submit(generate_actor_image, actor_desc, fal_key, actor_img) if need_img else None
-            future_voice = executor.submit(
-                generate_voiceover, full_narration, elevenlabs_key, audio_path, voice_id
-            ) if need_voice else None
+
+            # Long reels (60-120s): synthesize each script segment separately so
+            # the delivery follows the segment's own pacing cues (questions,
+            # pauses, story beats) — far more human than one long take.
+            voice_segments = []
+
+            def _make_voiceover():
+                nonlocal voice_segments
+                segments = script.get("segments") or []
+                if len(segments) >= 5 and float(script.get("duration_seconds") or 0) >= 45:
+                    joined = generate_voiceover_segments(
+                        segments, elevenlabs_key, output_dir, voice_id
+                    )
+                    if joined:
+                        voice_segments = [
+                            os.path.join(output_dir, f"voice_seg_{i}.mp3")
+                            for i, seg in enumerate(segments)
+                            if (seg.get("narration") or "").strip()
+                        ]
+                        voice_segments = [p for p in voice_segments if os.path.exists(p)]
+                        if os.path.abspath(joined) != os.path.abspath(audio_path):
+                            shutil.move(joined, audio_path)
+                        return audio_path
+                return generate_voiceover(full_narration, elevenlabs_key, audio_path, voice_id)
+
+            future_voice = executor.submit(_make_voiceover) if need_voice else None
 
             if future_img:
                 actor_img = future_img.result()
@@ -1394,7 +1602,7 @@ def generate_full_video(
     if not _exists(talking_head):
         if video_mode == "lowcost":
             log("[3/6] Generating talking head (Low Cost: Hailuo + VEED Lipsync)... This takes 2-5 minutes.")
-            talking_head = generate_talking_head_lowcost(actor_img, audio_path, fal_key, talking_head)
+            talking_head = generate_talking_head_lowcost(actor_img, audio_path, fal_key, talking_head, voice_segments=voice_segments or None)
         else:
             log("[3/6] Generating talking head video (Kling Avatar v2)... This takes 2-5 minutes.")
             talking_head = generate_talking_head(actor_img, audio_path, fal_key, talking_head)
