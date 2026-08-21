@@ -13,3 +13,9 @@
 {"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "language flip: en-hi"}
 {"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-21T08:44:05+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-21 slot=2 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "INFO", "msg": "planned reel T1-S01-H01-A1 — Stock Market Basics for Indian Beginners / what the stock market actually is / Myth-busting", "reel_id": "T1-S01-H01-A1", "kind": "bank", "lang_order": "hi-en", "slot": 2, "date": "2026-08-21"}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "INFO", "msg": "influencer: Rohan Mehta (25, male, Mumbai) — MBA fresher and markets enthusiast [INF-T1-M25]", "persona_id": "INF-T1-M25"}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "INFO", "msg": "language flip: hi-en"}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-21T12:37:22+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
