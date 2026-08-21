@@ -5,3 +5,11 @@
 {"ts": "2026-08-21T04:16:01+05:30", "level": "INFO", "msg": "language flip: en-hi"}
 {"ts": "2026-08-21T04:16:01+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-21T04:16:01+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-21T08:43:46+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-21 slot=1 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-21T08:44:04+05:30", "level": "WARN", "msg": "news fetch failed for https://sarkarikyp.com/feed/: <urlopen error [Errno 101] Network is unreachable>"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "news brief: 6 stories — top: [Google News — Indian Markets] Stock Market Today: Gift Nifty, Crude Oil To Gold Rate — Five Key Factors That May Drive S", "kind": "news"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "planned reel N-20260821-1-372a1e — Morning world-news brief / 6 market-moving stories / Bullet brief", "reel_id": "N-20260821-1-372a1e", "kind": "news", "lang_order": "en-hi", "slot": 1, "date": "2026-08-21"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "influencer: Jyoti Kumari (25, female, Ranchi) — school teacher learning personal finance [INF-T10-W25]", "persona_id": "INF-T10-W25"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "language flip: en-hi"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-21T08:44:05+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
