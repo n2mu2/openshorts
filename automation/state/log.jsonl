@@ -50,3 +50,9 @@
 {"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "language flip: en-hi"}
 {"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-22T08:35:21+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-22 slot=2 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "planned reel T5-S05-H01-A3 — Mutual Funds, SIPs and Compounding / index funds / Rule / checklist", "reel_id": "T5-S05-H01-A3", "kind": "bank", "lang_order": "hi-en", "slot": 2, "date": "2026-08-22"}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "influencer: Ritesh Yadav (35, male, Gurugram) — wealth manager [INF-T5-M35]", "persona_id": "INF-T5-M35"}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "language flip: hi-en"}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-22T12:29:00+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
