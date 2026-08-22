@@ -62,3 +62,9 @@
 {"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "language flip: en-hi"}
 {"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-22T16:10:09+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-22 slot=4 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "INFO", "msg": "planned reel T7-S07-H07-A9 — Trading Psychology and Common Mistakes / following Telegram tips blindly / Timely explainer", "reel_id": "T7-S07-H07-A9", "kind": "bank", "lang_order": "hi-en", "slot": 4, "date": "2026-08-22"}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "INFO", "msg": "influencer: Anand Khanna (40, male, Mumbai) — entrepreneur who survived two crashes [INF-T7-M40]", "persona_id": "INF-T7-M40"}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "INFO", "msg": "language flip: hi-en"}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-22T20:06:24+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
