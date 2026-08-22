@@ -56,3 +56,9 @@
 {"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "language flip: hi-en"}
 {"ts": "2026-08-22T12:29:00+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-22T12:29:00+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-22 slot=3 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "planned reel T3-S03-H07-A7 — Intraday Discipline and Risk / position sizing / Quiz / spot-it", "reel_id": "T3-S03-H07-A7", "kind": "bank", "lang_order": "en-hi", "slot": 3, "date": "2026-08-22"}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "influencer: Karan Bhatt (30, male, Mumbai) — finance analyst with strict rules [INF-T3-M30]", "persona_id": "INF-T3-M30"}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "language flip: en-hi"}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-22T16:10:09+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
