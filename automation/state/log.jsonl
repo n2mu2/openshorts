@@ -43,3 +43,10 @@
 {"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "language flip: hi-en"}
 {"ts": "2026-08-22T04:12:08+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
 {"ts": "2026-08-22T04:12:08+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
+{"ts": "2026-08-22T08:35:16+05:30", "level": "INFO", "msg": "=== reels bot run start: date=2026-08-22 slot=1 platforms=['instagram'] bilingual=True ==="}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "news brief: 6 stories — top: [Livemint Markets] Top Gainers &amp; Losers on 21 Aug: Welspun Corp, Jindal Saw, Urban Company, Vedanta, CarT", "kind": "news"}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "planned reel N-20260822-1-b75333 — Morning world-news brief / 6 market-moving stories / Bullet brief", "reel_id": "N-20260822-1-b75333", "kind": "news", "lang_order": "en-hi", "slot": 1, "date": "2026-08-22"}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "influencer: Faiz Ansari (25, male, Aligarh) — commerce graduate learning tax [INF-T10-M25]", "persona_id": "INF-T10-M25"}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "language flip: en-hi"}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "INFO", "msg": "step 1/5: Gemini writes the bilingual script…"}
+{"ts": "2026-08-22T08:35:21+05:30", "level": "ERROR", "msg": "HTTP error: HTTP 0: GEMINI_API_KEY is missing. Gemini is the mandatory correctness/authenticity gate for every reel — the bot refuses to produce or post without it."}
